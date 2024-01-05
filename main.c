@@ -91,6 +91,8 @@ int main( int argc, char *argv[] ) {
             case 0x9:
                 break;
             case 0xA:
+                //set index register
+                indexRegister = optionNNN;
                 break;
             case 0xB:
                 break;
