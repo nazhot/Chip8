@@ -83,6 +83,8 @@ int main( int argc, char *argv[] ) {
                 registers[optionX] = optionNN;
                 break;
             case 0x7:
+                //add to register
+                registers[optionX] += optionNN;
                 break;
             case 0x8:
                 break;
