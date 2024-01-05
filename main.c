@@ -79,6 +79,8 @@ int main( int argc, char *argv[] ) {
             case 0x5:
                 break;
             case 0x6:
+                //set register
+                registers[optionX] = optionNN;
                 break;
             case 0x7:
                 break;
