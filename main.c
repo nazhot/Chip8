@@ -2,6 +2,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+uint8_t memory[4096] = {0};
+uint8_t display[8][4] = {0};
+uint8_t registers[16] = {0};
+uint16_t indexRegister = 0;
+uint16_t programCounter = 0;
+uint16_t stack[16] = {0};
+uint8_t delayTimer = 0;
+uint8_t soundTimer = 0;
+
+void displaySprite( uint8_t optionX, uint8_t optionY, uint8_t optionN ) {
+    uint8_t xPos = registers[optionX] % 64;
+    uint8_t yPos = registers[optionY] % 32;
+    registers[0xF] = 0;
+    for ( int i = 0; i < optionN; ++i ) {
+        uint8_t spriteByte = memory[indexRegister + i];
+        for ( int j = 0; j < 8; ++j ) {
+            
+        }
+        //draw sprite to display
+    }
+}
 
 
 int main( int argc, char *argv[] ) {
@@ -26,14 +47,6 @@ int main( int argc, char *argv[] ) {
     };
 
 
-    uint8_t memory[4096] = {0};
-    uint8_t registers[16] = {0};
-    uint16_t indexRegister = 0;
-    uint16_t programCounter = 0;
-    uint8_t display[8][4] = {0};
-    uint16_t stack[16] = {0};
-    uint8_t delayTimer = 0;
-    uint8_t soundTimer = 0;
 
     {
         int startingMemoryIndex = 0x050;
@@ -99,8 +112,7 @@ int main( int argc, char *argv[] ) {
             case 0xC:
                 break;
             case 0xD:
-                uint8_t xPos = registers[optionX];
-                uint8_t yPos = registers[optionY];
+                displaySprite( optionX, optionY, optionN );
                 break;
             case 0xE:
                 break;
