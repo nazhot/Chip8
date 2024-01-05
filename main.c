@@ -67,6 +67,8 @@ int main( int argc, char *argv[] ) {
                 }
                 break;
             case 0x1:
+                //jump to address
+                programCounter = optionNNN;
                 break;
             case 0x2:
                 break;
