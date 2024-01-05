@@ -99,6 +99,8 @@ int main( int argc, char *argv[] ) {
             case 0xC:
                 break;
             case 0xD:
+                uint8_t xPos = registers[optionX];
+                uint8_t yPos = registers[optionY];
                 break;
             case 0xE:
                 break;
