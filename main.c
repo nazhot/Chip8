@@ -49,9 +49,22 @@ int main( int argc, char *argv[] ) {
         uint16_t instruction = memory[programCounter] << 8 | memory[programCounter + 1];
         programCounter += 2;
         //decode
-        uint16_t firstNibble = instruction & 0xF000;
+        uint8_t firstNibble = ( instruction & 0xF000 ) >> 12;
+        uint8_t optionX = ( instruction & 0x0F00 ) >> 8;
+        uint8_t optionY = ( instruction & 0x00F0 ) >> 4;
+        uint8_t optionN = ( instruction & 0x000F );
+        uint8_t optionNN = ( instruction & 0x00FF );
+        uint8_t optionNNN = ( instruction & 0x0FFF );
         switch ( firstNibble ) {
             case 0x0:
+                if ( instruction == 0x00E0 ) {
+                    //clear screen
+                    for ( int i = 0; i < 8; ++i ) {
+                        for ( int j = 0; j < 4; ++j ) {
+                            display[i][j] = 0x00;
+                        }
+                    }
+                }
                 break;
             case 0x1:
                 break;
