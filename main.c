@@ -6,7 +6,7 @@
 
 int main( int argc, char *argv[] ) {
 
-    uint16_t fonts[16][5] = {
+    uint8_t fonts[16][5] = {
         { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, 
         { 0x20, 0x60, 0x20, 0x20, 0x70 },
         { 0xF0, 0x10, 0xF0, 0x80, 0xF0 },
@@ -34,12 +34,19 @@ int main( int argc, char *argv[] ) {
     uint8_t delayTimer = 0;
     uint8_t soundTimer = 0;
 
+    {
+        int startingMemoryIndex = 0x050;
+        for ( int i = 0; i < 16; ++i ) {
+            for ( int j = 0; j < 5; ++j ) {
+                memory[startingMemoryIndex++] = fonts[i][j];
+            }
+        }
+    }
 
     while ( 1 ) {
         //fetch
         //decode
         //execute
     }
-
     return 0;
 }
