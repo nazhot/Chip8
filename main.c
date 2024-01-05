@@ -27,10 +27,11 @@ int main( int argc, char *argv[] ) {
 
 
     uint8_t memory[4096] = {0};
+    uint8_t registers[16] = {0};
+    uint16_t indexRegister = 0;
+    uint16_t programCounter = 0;
     uint8_t display[8][4] = {0};
-
-    uint8_t stack[32] = {0};
-
+    uint16_t stack[16] = {0};
     uint8_t delayTimer = 0;
     uint8_t soundTimer = 0;
 
