@@ -123,18 +123,6 @@ int main( int argc, char *argv[] ) {
     int displayHeight = pixelSize * DISPLAY_HEIGHT;
     int displayXOffset = ( windowSurface->w - displayWidth ) / 2;
     int displayYOffset = ( windowSurface->h - displayHeight ) / 2;
-    SDL_SetRenderDrawColor( renderer, 255, 0, 0, 255 );
-    for ( int i = 0; i < DISPLAY_WIDTH; ++i ) {
-        for ( int j = 0; j < DISPLAY_HEIGHT; ++j ) {
-            SDL_Rect r = {displayXOffset + pixelSize * i,
-                          displayYOffset + pixelSize * j,
-                          pixelSize, pixelSize};
-            //SDL_RenderFillRect( renderer, &r ); 
-            SDL_RenderDrawRect( renderer, &r );
-        }
-    }
-
-    SDL_RenderPresent( renderer );
     SDL_Delay( 5000 );
 
     SDL_Event e;
@@ -147,6 +135,20 @@ int main( int argc, char *argv[] ) {
             }
             SDL_UpdateWindowSurface( window );
         }
+        SDL_SetRenderDrawColor( renderer, 255, 0, 0, 255 );
+        for ( int i = 0; i < DISPLAY_WIDTH; ++i ) {
+            for ( int j = 0; j < DISPLAY_HEIGHT; ++j ) {
+                if ( display[i][j] ) { 
+                    SDL_Rect r = {displayXOffset + pixelSize * i,
+                                  displayYOffset + pixelSize * j,
+                                  pixelSize, pixelSize};
+                    //SDL_RenderFillRect( renderer, &r ); 
+                    SDL_RenderDrawRect( renderer, &r );
+                }
+            }
+        }
+
+        SDL_RenderPresent( renderer );
         //fetch
         uint16_t instruction = memory[programCounter] << 8 | memory[programCounter + 1];
         programCounter += 2;
