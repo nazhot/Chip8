@@ -110,10 +110,24 @@ int main( int argc, char *argv[] ) {
         return 1;
     }
 
-    SDL_UpdateWindowSurface( window );
-    SDL_Delay( 5000 );
+    int pixelWidth = windowSurface->w / DISPLAY_WIDTH;
+    int pixelHeight = windowSurface->h / DISPLAY_HEIGHT;
+
+    int pixelSize = pixelWidth < pixelHeight ? pixelWidth : pixelHeight;
+    int displayWidth = pixelSize * DISPLAY_WIDTH;
+    int displayHeight = pixelSize * DISPLAY_HEIGHT;
+
+
+    SDL_Event e;
 
     while ( 1 ) {
+        while ( SDL_PollEvent( &e ) > 0 ) {
+            switch ( e.type ) {
+                case SDL_QUIT:
+                    exit( 1 );
+            }
+            SDL_UpdateWindowSurface( window );
+        }
         //fetch
         uint16_t instruction = memory[programCounter] << 8 | memory[programCounter + 1];
         programCounter += 2;
