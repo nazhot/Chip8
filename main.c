@@ -168,10 +168,19 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
             chip->programCounter = chip->optionNNN;
             break;
         case 0x3:
+            if ( chip->registers[chip->optionX] == chip->optionNN ) {
+                chip->programCounter += 2;
+            }
             break;
         case 0x4:
+            if ( chip->registers[chip->optionX] != chip->optionNN ) {
+                chip->programCounter += 2;
+            }
             break;
         case 0x5:
+            if ( chip->registers[chip->optionX] == chip->registers[chip->optionY] ) {
+                chip->programCounter += 2;
+            }
             break;
         case 0x6:
             //set register
@@ -186,6 +195,9 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
         case 0x8:
             break;
         case 0x9:
+            if ( chip->registers[chip->optionX] != chip->registers[chip->optionY] ) {
+                chip->programCounter += 2;
+            }
             break;
         case 0xA:
             //set index register
