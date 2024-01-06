@@ -33,6 +33,13 @@ struct Chip8 {
     uint8_t soundTimer;
     uint16_t startingFontAddress;
     uint16_t startingProgramAddress;
+    uint16_t currentInstruction;
+    uint8_t firstNibble;
+    uint8_t optionX;
+    uint8_t optionY;
+    uint8_t optionN;
+    uint8_t optionNN;
+    uint16_t optionNNN;
 };
 
 struct Chip8* ch8_initialize() {
@@ -69,6 +76,29 @@ void ch8_initializeFonts( struct Chip8 *chip, uint16_t startingAddress ) {
         }
     }
     printf( "Fonts initialized\n" );
+}
+
+void ch8_clearMemory( struct Chip8 *chip ) {
+    memset( chip->memory, 0, BYTES_MEMORY );
+}
+
+void ch8_clearProgramMemory( struct Chip8 *chip ) {
+    for ( int i = chip->startingProgramAddress; i < BYTES_MEMORY; ++i ) {
+        chip->memory[i] = 0;
+    }
+}
+
+void ch8_fetchNextInstruction( struct Chip8 *chip ) {
+    chip->currentInstruction = chip->memory[chip->programCounter] << 8 |
+                               chip->memory[chip->programCounter + 1];
+
+    chip->firstNibble = ( chip->currentInstruction & 0xF000 ) >> 12;
+    chip->optionX = ( chip->currentInstruction & 0x0F00 ) >> 8;
+    chip->optionY = ( chip->currentInstruction & 0x00F0 ) >> 4;
+    chip->optionN = ( chip->currentInstruction & 0x000F );
+    chip->optionNN = ( chip->currentInstruction & 0x00FF );
+    chip->optionNNN = ( chip->currentInstruction & 0x0FFF );
+    chip->programCounter += 2;
 }
 
 uint8_t memory[BYTES_MEMORY] = {0};
