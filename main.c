@@ -88,6 +88,33 @@ void ch8_clearProgramMemory( struct Chip8 *chip ) {
     }
 }
 
+void ch8_clearScreen( struct Chip8 *chip ) {
+    for ( int i = 0; i < DISPLAY_WIDTH; ++i ) {
+        for ( int j = 0; j < DISPLAY_HEIGHT; ++j ) {
+            chip->display[i][j] = 0x00;
+        }
+    }
+}
+
+void ch8_displaySprite( struct Chip8 *chip ) {
+    uint8_t xPos = chip->registers[chip->optionX] % DISPLAY_WIDTH;
+    uint8_t yPos = chip->registers[chip->optionY] % DISPLAY_HEIGHT;
+    chip->registers[0xF] = 0;
+    for ( int i = 0; i < chip->optionN && yPos + i < DISPLAY_HEIGHT; ++i ) {
+        assert( chip->indexRegister + i < BYTES_MEMORY );
+        uint8_t spriteByte = chip->memory[chip->indexRegister + i];
+        for ( int j = 0; j < 8 && j + xPos < DISPLAY_WIDTH; ++j ) {
+            uint8_t spritePixel = ( spriteByte >> ( 7 - j ) ) & 1;
+            if ( spritePixel ) {
+                if ( chip->display[xPos + j][yPos + i] ) {
+                    chip->registers[0xF] = 1;
+                }
+                chip->display[xPos + j][yPos + i] = !chip->display[xPos + j][yPos + i];
+            }
+        }
+    }
+}
+
 void ch8_fetchNextInstruction( struct Chip8 *chip ) {
     chip->currentInstruction = chip->memory[chip->programCounter] << 8 |
                                chip->memory[chip->programCounter + 1];
@@ -99,6 +126,65 @@ void ch8_fetchNextInstruction( struct Chip8 *chip ) {
     chip->optionNN = ( chip->currentInstruction & 0x00FF );
     chip->optionNNN = ( chip->currentInstruction & 0x0FFF );
     chip->programCounter += 2;
+}
+
+void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
+    switch ( chip->firstNibble ) {
+        case 0x0:
+            if ( chip->currentInstruction == 0x00E0 ) {
+                //clear screen
+                log( "Clearing screen\n" );
+                ch8_clearScreen( chip );
+            }
+            break;
+        case 0x1:
+            //jump to address
+            log( "Jumping from %x to %x\n", chip->programCounter - 2, 
+                                            chip->optionNNN );
+            chip->programCounter = chip->optionNNN;
+            break;
+        case 0x2:
+            break;
+        case 0x3:
+            break;
+        case 0x4:
+            break;
+        case 0x5:
+            break;
+        case 0x6:
+            //set register
+            log( "Setting register %x to %x\n", chip->optionX, chip->optionNN );
+            chip->registers[chip->optionX] = chip->optionNN;
+            break;
+        case 0x7:
+            //add to register
+            log( "Adding %x to register %x\n", chip->optionNN, chip->optionX );
+            chip->registers[chip->optionX] += chip->optionNN;
+            break;
+        case 0x8:
+            break;
+        case 0x9:
+            break;
+        case 0xA:
+            //set index register
+            log( "Setting index register to %x\n", chip->optionNN );
+            chip->indexRegister = chip->optionNNN;
+            break;
+        case 0xB:
+            break;
+        case 0xC:
+            break;
+        case 0xD:
+            log( "Displaying sprite with X: %x, Y: %x, N: %x\n", 
+                    chip->registers[chip->optionX],
+                    chip->registers[chip->optionY], chip->optionN );
+            ch8_displaySprite( chip );
+            break;
+        case 0xE:
+            break;
+        case 0xF:
+            break;
+    }
 }
 
 uint8_t memory[BYTES_MEMORY] = {0};
