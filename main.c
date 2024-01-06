@@ -1,3 +1,4 @@
+#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_timer.h>
@@ -91,6 +92,16 @@ int main( int argc, char *argv[] ) {
         printf( "Program read in: %d bytes, program starts at %x\n", programIndex - startingProgramIndex, startingProgramIndex );
     }
 
+    //memory[0x200] = 0x00;
+    //memory[0x201] = 0xE0;
+    //memory[0x202] = 0xA0;
+    //memory[0x203] = 0x55;
+    //memory[0x204] = 0xD0;
+    //memory[0x205] = 0x05;
+    //memory[0x206] = 0x12;
+    //memory[0x207] = 0x06;
+
+
     if ( SDL_Init( SDL_INIT_EVERYTHING ) < 0 ) {
         fprintf( stderr, "Could not initialize SDL2\n" );
         return 1;
@@ -127,6 +138,19 @@ int main( int argc, char *argv[] ) {
     SDL_Event e;
 
     while ( 1 ) {
+        int step = 1;
+        while ( step ) {
+            if ( SDL_PollEvent( &e ) > 0 ) {
+                switch ( e.type ) {
+                    case SDL_QUIT:
+                        exit( 1 );
+                    case SDL_KEYUP:
+                        step = 0;
+                        break;
+                }
+            }
+        }
+
         while ( SDL_PollEvent( &e ) > 0 ) {
             switch ( e.type ) {
                 case SDL_QUIT:
@@ -150,6 +174,7 @@ int main( int argc, char *argv[] ) {
         SDL_RenderPresent( renderer );
         //fetch
         uint16_t instruction = memory[programCounter] << 8 | memory[programCounter + 1];
+        log( "Program counter: %x\n", programCounter );
         log( "First byte: %02x, Second byte: %02x, Instruction: %04x\n",
              memory[programCounter], memory[programCounter + 1], instruction );
         programCounter += 2;
@@ -159,7 +184,7 @@ int main( int argc, char *argv[] ) {
         uint8_t optionY = ( instruction & 0x00F0 ) >> 4;
         uint8_t optionN = ( instruction & 0x000F );
         uint8_t optionNN = ( instruction & 0x00FF );
-        uint8_t optionNNN = ( instruction & 0x0FFF );
+        uint16_t optionNNN = ( instruction & 0x0FFF );
         switch ( firstNibble ) {
             case 0x0:
                 if ( instruction == 0x00E0 ) {
@@ -174,7 +199,7 @@ int main( int argc, char *argv[] ) {
                 break;
             case 0x1:
                 //jump to address
-                log( "Jumping to %x from %x\n", programCounter, optionNNN );
+                log( "Jumping from %x to %x\n", programCounter - 2, optionNNN );
                 programCounter = optionNNN;
                 break;
             case 0x2:
@@ -209,7 +234,7 @@ int main( int argc, char *argv[] ) {
             case 0xC:
                 break;
             case 0xD:
-                log( "Displaying sprite with X: %x, Y: %x, N: %x\n", optionX, optionY, optionN );
+                log( "Displaying sprite with X: %x, Y: %x, N: %x\n", registers[optionX], registers[optionY], optionN );
                 displaySprite( optionX, optionY, optionN );
                 break;
             case 0xE:
@@ -217,7 +242,6 @@ int main( int argc, char *argv[] ) {
             case 0xF:
                 break;
         }
-        //execute
     }
     return 0;
 }
