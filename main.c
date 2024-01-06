@@ -12,6 +12,7 @@
 #define DISPLAY_WIDTH 64  //pixels, standard is 64
 #define DISPLAY_HEIGHT 32 //pixels, standard is 32
 #define BYTES_MEMORY 4096 //standard is 4096
+#define STACK_SIZE 15 //standard is 16
 
 #define DEBUG  //define to print debug messages
 #define STEP 0 //whether to wait for user input to step through instructions
@@ -28,7 +29,8 @@ struct Chip8 {
     uint8_t registers[16];
     uint16_t indexRegister;
     uint16_t programCounter;
-    uint16_t stack[16];
+    uint16_t stack[STACK_SIZE];
+    uint16_t stackAddress;
     uint8_t delayTimer;
     uint8_t soundTimer;
     uint16_t startingFontAddress;
@@ -149,6 +151,9 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
                 //clear screen
                 log( "Clearing screen\n" );
                 ch8_clearScreen( chip );
+            } else if ( chip->currentInstruction == 0x00EE ) {
+                assert( chip->stackAddress > 0 );
+                chip->programCounter = chip->stack[--chip->stackAddress];
             }
             break;
         case 0x1:
@@ -158,6 +163,9 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
             chip->programCounter = chip->optionNNN;
             break;
         case 0x2:
+            assert( chip->stackAddress < STACK_SIZE ); 
+            chip->stack[chip->stackAddress++] = chip->programCounter - 2;
+            chip->programCounter = chip->optionNNN;
             break;
         case 0x3:
             break;
@@ -204,6 +212,7 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
 int main( int argc, char *argv[] ) {
 
     struct Chip8 *chip = ch8_initialize();
+    ch8_initializeFonts( chip, 0x50 );
     ch8_loadFileIntoMemory( chip, "roms/IBM_Logo.ch8" );
 
     //Test program, just drawing 0 at the top left of the screen
