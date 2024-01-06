@@ -2,10 +2,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <SDL2/SDL.h>
 
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
 #define BYTES_MEMORY 4096
+
+#define DEBUG
+
+#ifdef DEBUG
+#define log(...) printf(__VA_ARGS__)
+#else
+#define log(...)
+#endif
 
 uint8_t memory[BYTES_MEMORY] = {0};
 uint8_t display[DISPLAY_WIDTH][DISPLAY_HEIGHT] = {0};
@@ -66,12 +75,16 @@ int main( int argc, char *argv[] ) {
                 memory[fontIndex++] = fonts[i][j];
             }
         }
+        printf( "Fonts initialized\n" );
     }
 
     { //read in the program file
-        int programIndex = 0x200;
+        int startingProgramIndex = 0x200;
+        int programIndex = startingProgramIndex;
         FILE *inputFile = fopen( "roms/IBM_Logo.ch8", "rb" );
         while ( fread( &memory[programIndex++], 1, 1, inputFile ) );
+        programCounter = startingProgramIndex;
+        printf( "Program read in: %d bytes, program starts at %x\n", programIndex - startingProgramIndex, startingProgramIndex );
     }
 
         
@@ -91,8 +104,9 @@ int main( int argc, char *argv[] ) {
             case 0x0:
                 if ( instruction == 0x00E0 ) {
                     //clear screen
-                    for ( int i = 0; i < 8; ++i ) {
-                        for ( int j = 0; j < 4; ++j ) {
+                    log( "Clearing screen\n" );
+                    for ( int i = 0; i < DISPLAY_WIDTH; ++i ) {
+                        for ( int j = 0; j < DISPLAY_HEIGHT; ++j ) {
                             display[i][j] = 0x00;
                         }
                     }
@@ -100,6 +114,7 @@ int main( int argc, char *argv[] ) {
                 break;
             case 0x1:
                 //jump to address
+                log( "Jumping to %x from %x\n", programCounter, optionNNN );
                 programCounter = optionNNN;
                 break;
             case 0x2:
@@ -112,10 +127,12 @@ int main( int argc, char *argv[] ) {
                 break;
             case 0x6:
                 //set register
+                log( "Setting register %x to %x\n", optionX, optionNN );
                 registers[optionX] = optionNN;
                 break;
             case 0x7:
                 //add to register
+                log( "Adding %x to register %x\n", optionNN, optionX );
                 registers[optionX] += optionNN;
                 break;
             case 0x8:
@@ -124,6 +141,7 @@ int main( int argc, char *argv[] ) {
                 break;
             case 0xA:
                 //set index register
+                log( "Setting index register to %x\n", optionNN );
                 indexRegister = optionNNN;
                 break;
             case 0xB:
@@ -131,6 +149,7 @@ int main( int argc, char *argv[] ) {
             case 0xC:
                 break;
             case 0xD:
+                log( "Displaying sprite with X: %x, Y: %x, N: %x\n", optionX, optionY, optionN );
                 displaySprite( optionX, optionY, optionN );
                 break;
             case 0xE:
