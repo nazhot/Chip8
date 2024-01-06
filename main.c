@@ -78,6 +78,20 @@ void ch8_initializeFonts( struct Chip8 *chip, uint16_t startingAddress ) {
     printf( "Fonts initialized\n" );
 }
 
+void ch8_loadFileIntoMemory( struct Chip8 *chip, const char filePath[] ) {
+    FILE *inputFile = fopen( filePath, "rb" );
+    if ( !inputFile ) {
+        fprintf( stderr, "Cannot find file at path %s\n", filePath );
+        exit( 1 );
+    }
+    uint16_t programAddress = chip->startingProgramAddress;
+    //read one byte at a time into memory
+    while ( fread( &chip->memory[programAddress++], 1, 1, inputFile ) );
+    printf( "Program read in: %d bytes, program starts at %x\n",
+               programAddress - chip->startingProgramAddress,
+               chip->startingProgramAddress );
+}
+
 void ch8_clearMemory( struct Chip8 *chip ) {
     memset( chip->memory, 0, BYTES_MEMORY );
 }
@@ -187,95 +201,10 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
     }
 }
 
-uint8_t memory[BYTES_MEMORY] = {0};
-int8_t display[DISPLAY_WIDTH][DISPLAY_HEIGHT] = {0};
-uint8_t registers[16] = {0};
-uint16_t indexRegister = 0;
-uint16_t programCounter = 0;
-uint16_t stack[16] = {0};
-uint8_t delayTimer = 0;
-uint8_t soundTimer = 0;
-
-/*
- * Display a sprite to the screen
- *
- * Each sprite is 8 pixels wide, a byte. Each bit represents whether the display
- * pixel should remain the same (0) or switch (1). If the function would change
- * an on pixel to off, register F is set to 1. The bits are read from most
- * significant to least significant. The first memory address of the sprite is
- * stored in indexRegister, and each row is stored sequentially after it.
- *
- * Sprites do not wrap once drawing. If the x/y dimension is greater than the
- * display dimensions, the modulo of that number with the dimension is used. Once
- * the sprite is being drawn, if the dimension exceeds the maximum, it is not
- * drawn.
- *
- * @param optionX 4 bits, register that x dimension is stored in
- * @param optionY 4 bits, register that y dimension is stored in
- * @param optionN 4 bits, how many rows the sprite has
- */
-void displaySprite( uint8_t optionX, uint8_t optionY, uint8_t optionN ) {
-    uint8_t xPos = registers[optionX] % DISPLAY_WIDTH;
-    uint8_t yPos = registers[optionY] % DISPLAY_HEIGHT;
-    registers[0xF] = 0;
-    for ( int i = 0; i < optionN && yPos + i < DISPLAY_HEIGHT; ++i ) {
-        assert( indexRegister + i < BYTES_MEMORY );
-        uint8_t spriteByte = memory[indexRegister + i];
-        for ( int j = 0; j < 8 && j + xPos < DISPLAY_WIDTH; ++j ) {
-            uint8_t spritePixel = ( spriteByte >> ( 7 - j ) ) & 1;
-            if ( spritePixel ) {
-                if ( display[xPos + j][yPos + i] ) {
-                    registers[0xF] = 1;
-                }
-                display[xPos + j][yPos + i] = !display[xPos + j][yPos + i];
-            }
-        }
-    }
-}
-
-
 int main( int argc, char *argv[] ) {
 
-    uint8_t fonts[16][5] = {
-        { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, //0
-        { 0x20, 0x60, 0x20, 0x20, 0x70 }, //1
-        { 0xF0, 0x10, 0xF0, 0x80, 0xF0 }, //2
-        { 0xF0, 0x10, 0xF0, 0x10, 0xF0 }, //3
-        { 0x90, 0x90, 0xF0, 0x10, 0x10 }, //4
-        { 0xF0, 0x80, 0xF0, 0x10, 0xF0 }, //5
-        { 0xF0, 0x80, 0xF0, 0x90, 0xF0 }, //6
-        { 0xF0, 0x10, 0x20, 0x40, 0x40 }, //7
-        { 0xF0, 0x90, 0xF0, 0x90, 0xF0 }, //8
-        { 0xF0, 0x90, 0xF0, 0x10, 0xF0 }, //9
-        { 0xF0, 0x90, 0xF0, 0x90, 0x90 }, //A
-        { 0xE0, 0x90, 0xE0, 0x90, 0xE0 }, //B
-        { 0xF0, 0x80, 0x80, 0x80, 0xF0 }, //C
-        { 0xE0, 0x90, 0x90, 0x90, 0xE0 }, //D
-        { 0xF0, 0x80, 0xF0, 0x80, 0xF0 }, //E
-        { 0xF0, 0x80, 0xF0, 0x80, 0x80 }  //F
-    };
-
-
-
-    { //initialize the fonts into memory
-        int fontIndex = 0x050;
-        for ( int i = 0; i < 16; ++i ) {
-            for ( int j = 0; j < 5; ++j ) {
-                memory[fontIndex++] = fonts[i][j];
-            }
-        }
-        printf( "Fonts initialized\n" );
-    }
-
-    { //read in the program file
-        int startingProgramIndex = 0x200; //default starting position is 0x200
-        int programIndex = startingProgramIndex;
-        FILE *inputFile = fopen( "roms/IBM_Logo.ch8", "rb" );
-        //read one byte at a time into memory
-        while ( fread( &memory[programIndex++], 1, 1, inputFile ) );
-        programCounter = startingProgramIndex;
-        printf( "Program read in: %d bytes, program starts at %x\n", programIndex - startingProgramIndex, startingProgramIndex );
-    }
+    struct Chip8 *chip = ch8_initialize();
+    ch8_loadFileIntoMemory( chip, "roms/IBM_Logo.ch8" );
 
     //Test program, just drawing 0 at the top left of the screen
     //memory[0x200] = 0x00;
@@ -359,7 +288,7 @@ int main( int argc, char *argv[] ) {
         SDL_SetRenderDrawColor( renderer, 255, 0, 0, 255 );
         for ( int i = 0; i < DISPLAY_WIDTH; ++i ) {
             for ( int j = 0; j < DISPLAY_HEIGHT; ++j ) {
-                if ( display[i][j] ) { 
+                if ( chip->display[i][j] ) { 
                     SDL_Rect r = {displayXOffset + pixelSize * i,
                                   displayYOffset + pixelSize * j,
                                   pixelSize, pixelSize};
@@ -371,80 +300,9 @@ int main( int argc, char *argv[] ) {
         SDL_RenderPresent( renderer );
 
         //fetch
-        uint16_t instruction = memory[programCounter] << 8 |
-                               memory[programCounter + 1];
-        log( "Program counter: %x\n", programCounter );
-        log( "First byte: %02x, Second byte: %02x, Instruction: %04x\n",
-             memory[programCounter], memory[programCounter + 1], instruction );
-
-        programCounter += 2; //increment counter after fetching, very few
-                             //instructions revert or change this
-        
+        ch8_fetchNextInstruction( chip ); 
         //decode
-        //get first nibble and all possible options that go with it
-        uint8_t firstNibble = ( instruction & 0xF000 ) >> 12;
-        uint8_t optionX = ( instruction & 0x0F00 ) >> 8;
-        uint8_t optionY = ( instruction & 0x00F0 ) >> 4;
-        uint8_t optionN = ( instruction & 0x000F );
-        uint8_t optionNN = ( instruction & 0x00FF );
-        uint16_t optionNNN = ( instruction & 0x0FFF );
-        switch ( firstNibble ) {
-            case 0x0:
-                if ( instruction == 0x00E0 ) {
-                    //clear screen
-                    log( "Clearing screen\n" );
-                    for ( int i = 0; i < DISPLAY_WIDTH; ++i ) {
-                        for ( int j = 0; j < DISPLAY_HEIGHT; ++j ) {
-                            display[i][j] = 0x00;
-                        }
-                    }
-                }
-                break;
-            case 0x1:
-                //jump to address
-                log( "Jumping from %x to %x\n", programCounter - 2, optionNNN );
-                programCounter = optionNNN;
-                break;
-            case 0x2:
-                break;
-            case 0x3:
-                break;
-            case 0x4:
-                break;
-            case 0x5:
-                break;
-            case 0x6:
-                //set register
-                log( "Setting register %x to %x\n", optionX, optionNN );
-                registers[optionX] = optionNN;
-                break;
-            case 0x7:
-                //add to register
-                log( "Adding %x to register %x\n", optionNN, optionX );
-                registers[optionX] += optionNN;
-                break;
-            case 0x8:
-                break;
-            case 0x9:
-                break;
-            case 0xA:
-                //set index register
-                log( "Setting index register to %x\n", optionNN );
-                indexRegister = optionNNN;
-                break;
-            case 0xB:
-                break;
-            case 0xC:
-                break;
-            case 0xD:
-                log( "Displaying sprite with X: %x, Y: %x, N: %x\n", registers[optionX], registers[optionY], optionN );
-                displaySprite( optionX, optionY, optionN );
-                break;
-            case 0xE:
-                break;
-            case 0xF:
-                break;
-        }
+        ch8_decodeAndExecuteCurrentInstruction( chip );
     }
     return 0;
 }
