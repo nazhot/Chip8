@@ -9,16 +9,17 @@
 #include <assert.h>
 #include <SDL2/SDL.h>
 
-#define DISPLAY_WIDTH 64
-#define DISPLAY_HEIGHT 32
-#define BYTES_MEMORY 4096
+#define DISPLAY_WIDTH 64  //pixels, standard is 64
+#define DISPLAY_HEIGHT 32 //pixels, standard is 32
+#define BYTES_MEMORY 4096 //standard is 4096
 
-#define DEBUG
+#define DEBUG  //define to print debug messages
+#define STEP 0 //whether to wait for user input to step through instructions
 
 #ifdef DEBUG
-#define log(...) printf(__VA_ARGS__)
+#define log(...) printf(__VA_ARGS__) //macro for logging
 #else
-#define log(...)
+#define log(...) //if not debugging, don't printf
 #endif
 
 uint8_t memory[BYTES_MEMORY] = {0};
@@ -30,6 +31,24 @@ uint16_t stack[16] = {0};
 uint8_t delayTimer = 0;
 uint8_t soundTimer = 0;
 
+/*
+ * Display a sprite to the screen
+ *
+ * Each sprite is 8 pixels wide, a byte. Each bit represents whether the display
+ * pixel should remain the same (0) or switch (1). If the function would change
+ * an on pixel to off, register F is set to 1. The bits are read from most
+ * significant to least significant. The first memory address of the sprite is
+ * stored in indexRegister, and each row is stored sequentially after it.
+ *
+ * Sprites do not wrap once drawing. If the x/y dimension is greater than the
+ * display dimensions, the modulo of that number with the dimension is used. Once
+ * the sprite is being drawn, if the dimension exceeds the maximum, it is not
+ * drawn.
+ *
+ * @param optionX 4 bits, register that x dimension is stored in
+ * @param optionY 4 bits, register that y dimension is stored in
+ * @param optionN 4 bits, how many rows the sprite has
+ */
 void displaySprite( uint8_t optionX, uint8_t optionY, uint8_t optionN ) {
     uint8_t xPos = registers[optionX] % DISPLAY_WIDTH;
     uint8_t yPos = registers[optionY] % DISPLAY_HEIGHT;
@@ -53,22 +72,22 @@ void displaySprite( uint8_t optionX, uint8_t optionY, uint8_t optionN ) {
 int main( int argc, char *argv[] ) {
 
     uint8_t fonts[16][5] = {
-        { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, 
-        { 0x20, 0x60, 0x20, 0x20, 0x70 },
-        { 0xF0, 0x10, 0xF0, 0x80, 0xF0 },
-        { 0xF0, 0x10, 0xF0, 0x10, 0xF0 },
-        { 0x90, 0x90, 0xF0, 0x10, 0x10 },
-        { 0xF0, 0x80, 0xF0, 0x10, 0xF0 },
-        { 0xF0, 0x80, 0xF0, 0x90, 0xF0 },
-        { 0xF0, 0x10, 0x20, 0x40, 0x40 },
-        { 0xF0, 0x90, 0xF0, 0x90, 0xF0 },
-        { 0xF0, 0x90, 0xF0, 0x10, 0xF0 },
-        { 0xF0, 0x90, 0xF0, 0x90, 0x90 },
-        { 0xE0, 0x90, 0xE0, 0x90, 0xE0 },
-        { 0xF0, 0x80, 0x80, 0x80, 0xF0 },
-        { 0xE0, 0x90, 0x90, 0x90, 0xE0 },
-        { 0xF0, 0x80, 0xF0, 0x80, 0xF0 },
-        { 0xF0, 0x80, 0xF0, 0x80, 0x80 }
+        { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, //0
+        { 0x20, 0x60, 0x20, 0x20, 0x70 }, //1
+        { 0xF0, 0x10, 0xF0, 0x80, 0xF0 }, //2
+        { 0xF0, 0x10, 0xF0, 0x10, 0xF0 }, //3
+        { 0x90, 0x90, 0xF0, 0x10, 0x10 }, //4
+        { 0xF0, 0x80, 0xF0, 0x10, 0xF0 }, //5
+        { 0xF0, 0x80, 0xF0, 0x90, 0xF0 }, //6
+        { 0xF0, 0x10, 0x20, 0x40, 0x40 }, //7
+        { 0xF0, 0x90, 0xF0, 0x90, 0xF0 }, //8
+        { 0xF0, 0x90, 0xF0, 0x10, 0xF0 }, //9
+        { 0xF0, 0x90, 0xF0, 0x90, 0x90 }, //A
+        { 0xE0, 0x90, 0xE0, 0x90, 0xE0 }, //B
+        { 0xF0, 0x80, 0x80, 0x80, 0xF0 }, //C
+        { 0xE0, 0x90, 0x90, 0x90, 0xE0 }, //D
+        { 0xF0, 0x80, 0xF0, 0x80, 0xF0 }, //E
+        { 0xF0, 0x80, 0xF0, 0x80, 0x80 }  //F
     };
 
 
@@ -84,14 +103,16 @@ int main( int argc, char *argv[] ) {
     }
 
     { //read in the program file
-        int startingProgramIndex = 0x200;
+        int startingProgramIndex = 0x200; //default starting position is 0x200
         int programIndex = startingProgramIndex;
         FILE *inputFile = fopen( "roms/IBM_Logo.ch8", "rb" );
+        //read one byte at a time into memory
         while ( fread( &memory[programIndex++], 1, 1, inputFile ) );
         programCounter = startingProgramIndex;
         printf( "Program read in: %d bytes, program starts at %x\n", programIndex - startingProgramIndex, startingProgramIndex );
     }
 
+    //Test program, just drawing 0 at the top left of the screen
     //memory[0x200] = 0x00;
     //memory[0x201] = 0xE0;
     //memory[0x202] = 0xA0;
@@ -101,34 +122,37 @@ int main( int argc, char *argv[] ) {
     //memory[0x206] = 0x12;
     //memory[0x207] = 0x06;
 
-
+    //set up all of the SDL things
     if ( SDL_Init( SDL_INIT_EVERYTHING ) < 0 ) {
         fprintf( stderr, "Could not initialize SDL2\n" );
         return 1;
     }
 
-
     SDL_Window *window = SDL_CreateWindow( "CHIP-8", SDL_WINDOWPOS_CENTERED,
                                            SDL_WINDOWPOS_CENTERED, 680, 
                                            480, 0 );
-    SDL_Renderer *renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
-    SDL_RenderClear( renderer );
-
     if ( !window ) {
         fprintf( stderr, "Could not create window\n" );
         return 1;
     }
 
-    SDL_Surface *windowSurface = SDL_GetWindowSurface( window );
+    SDL_Renderer *renderer = SDL_CreateRenderer( window, -1, 
+                                                 SDL_RENDERER_ACCELERATED );
+    if ( !renderer ) {
+        fprintf( stderr, "Could not create renderer\n" );
+        return 1;
+    }
+    SDL_RenderClear( renderer );
 
+    SDL_Surface *windowSurface = SDL_GetWindowSurface( window );
     if ( !windowSurface ) {
         fprintf( stderr, "Could not get surface from window\n" );
         return 1;
     }
 
+    //set up all of the pixel requirements
     int pixelWidth = windowSurface->w / DISPLAY_WIDTH;
     int pixelHeight = windowSurface->h / DISPLAY_HEIGHT;
-
     int pixelSize = pixelWidth < pixelHeight ? pixelWidth : pixelHeight;
     int displayWidth = pixelSize * DISPLAY_WIDTH;
     int displayHeight = pixelSize * DISPLAY_HEIGHT;
@@ -138,7 +162,13 @@ int main( int argc, char *argv[] ) {
     SDL_Event e;
 
     while ( 1 ) {
-        int step = 1;
+        /*
+         * If STEP is 1, the program will hang up here with every step of the
+         * chip, until the user presses any button. This also allows for the
+         * user to still exit the program while it is running and stepping
+         * through.
+         */
+        int step = STEP;
         while ( step ) {
             if ( SDL_PollEvent( &e ) > 0 ) {
                 switch ( e.type ) {
@@ -151,6 +181,7 @@ int main( int argc, char *argv[] ) {
             }
         }
 
+        //this is in case STEP is 0, still allowing user to quit
         while ( SDL_PollEvent( &e ) > 0 ) {
             switch ( e.type ) {
                 case SDL_QUIT:
@@ -158,6 +189,8 @@ int main( int argc, char *argv[] ) {
             }
             SDL_UpdateWindowSurface( window );
         }
+
+        //draw the pixels based on display
         SDL_SetRenderDrawColor( renderer, 255, 0, 0, 255 );
         for ( int i = 0; i < DISPLAY_WIDTH; ++i ) {
             for ( int j = 0; j < DISPLAY_HEIGHT; ++j ) {
@@ -165,20 +198,25 @@ int main( int argc, char *argv[] ) {
                     SDL_Rect r = {displayXOffset + pixelSize * i,
                                   displayYOffset + pixelSize * j,
                                   pixelSize, pixelSize};
-                    //SDL_RenderFillRect( renderer, &r ); 
-                    SDL_RenderDrawRect( renderer, &r );
+                    //SDL_RenderFillRect( renderer, &r ); //filled rect
+                    SDL_RenderDrawRect( renderer, &r );   //rect outline
                 }
             }
         }
-
         SDL_RenderPresent( renderer );
+
         //fetch
-        uint16_t instruction = memory[programCounter] << 8 | memory[programCounter + 1];
+        uint16_t instruction = memory[programCounter] << 8 |
+                               memory[programCounter + 1];
         log( "Program counter: %x\n", programCounter );
         log( "First byte: %02x, Second byte: %02x, Instruction: %04x\n",
              memory[programCounter], memory[programCounter + 1], instruction );
-        programCounter += 2;
+
+        programCounter += 2; //increment counter after fetching, very few
+                             //instructions revert or change this
+        
         //decode
+        //get first nibble and all possible options that go with it
         uint8_t firstNibble = ( instruction & 0xF000 ) >> 12;
         uint8_t optionX = ( instruction & 0x0F00 ) >> 8;
         uint8_t optionY = ( instruction & 0x00F0 ) >> 4;
