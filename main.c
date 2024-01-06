@@ -22,8 +22,57 @@
 #define log(...) //if not debugging, don't printf
 #endif
 
+struct Chip8 {
+    uint8_t memory[BYTES_MEMORY];
+    int8_t display[DISPLAY_WIDTH][DISPLAY_HEIGHT];
+    uint8_t registers[16];
+    uint16_t indexRegister;
+    uint16_t programCounter;
+    uint16_t stack[16];
+    uint8_t delayTimer;
+    uint8_t soundTimer;
+    uint16_t startingFontAddress;
+    uint16_t startingProgramAddress;
+};
+
+struct Chip8* ch8_initialize() {
+    struct Chip8 *chip = malloc( sizeof( struct Chip8 ) );
+    memset( chip, 0, sizeof( struct Chip8 ) );
+    chip->startingProgramAddress = 0x200;
+    chip->programCounter = 0x200;
+    return chip;
+}
+
+void ch8_initializeFonts( struct Chip8 *chip, uint16_t startingAddress ) {
+    static uint8_t fonts[16][5] = {
+        { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, //0
+        { 0x20, 0x60, 0x20, 0x20, 0x70 }, //1
+        { 0xF0, 0x10, 0xF0, 0x80, 0xF0 }, //2
+        { 0xF0, 0x10, 0xF0, 0x10, 0xF0 }, //3
+        { 0x90, 0x90, 0xF0, 0x10, 0x10 }, //4
+        { 0xF0, 0x80, 0xF0, 0x10, 0xF0 }, //5
+        { 0xF0, 0x80, 0xF0, 0x90, 0xF0 }, //6
+        { 0xF0, 0x10, 0x20, 0x40, 0x40 }, //7
+        { 0xF0, 0x90, 0xF0, 0x90, 0xF0 }, //8
+        { 0xF0, 0x90, 0xF0, 0x10, 0xF0 }, //9
+        { 0xF0, 0x90, 0xF0, 0x90, 0x90 }, //A
+        { 0xE0, 0x90, 0xE0, 0x90, 0xE0 }, //B
+        { 0xF0, 0x80, 0x80, 0x80, 0xF0 }, //C
+        { 0xE0, 0x90, 0x90, 0x90, 0xE0 }, //D
+        { 0xF0, 0x80, 0xF0, 0x80, 0xF0 }, //E
+        { 0xF0, 0x80, 0xF0, 0x80, 0x80 }  //F
+    };
+    chip->startingFontAddress = startingAddress; 
+    for ( int i = 0; i < 16; ++i ) {
+        for ( int j = 0; j < 5; ++j ) {
+            chip->memory[startingAddress] = fonts[i][j];
+        }
+    }
+    printf( "Fonts initialized\n" );
+}
+
 uint8_t memory[BYTES_MEMORY] = {0};
-uint8_t display[DISPLAY_WIDTH][DISPLAY_HEIGHT] = {0};
+int8_t display[DISPLAY_WIDTH][DISPLAY_HEIGHT] = {0};
 uint8_t registers[16] = {0};
 uint16_t indexRegister = 0;
 uint16_t programCounter = 0;
