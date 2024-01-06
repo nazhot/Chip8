@@ -59,14 +59,22 @@ int main( int argc, char *argv[] ) {
 
 
 
-    {
-        int startingMemoryIndex = 0x050;
+    { //initialize the fonts into memory
+        int fontIndex = 0x050;
         for ( int i = 0; i < 16; ++i ) {
             for ( int j = 0; j < 5; ++j ) {
-                memory[startingMemoryIndex++] = fonts[i][j];
+                memory[fontIndex++] = fonts[i][j];
             }
         }
     }
+
+    { //read in the program file
+        int programIndex = 0x200;
+        FILE *inputFile = fopen( "roms/IBM_Logo.ch8", "rb" );
+        while ( fread( &memory[programIndex++], 1, 1, inputFile ) );
+    }
+
+        
 
     while ( 1 ) {
         //fetch
