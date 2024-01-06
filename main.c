@@ -123,7 +123,6 @@ int main( int argc, char *argv[] ) {
     int displayHeight = pixelSize * DISPLAY_HEIGHT;
     int displayXOffset = ( windowSurface->w - displayWidth ) / 2;
     int displayYOffset = ( windowSurface->h - displayHeight ) / 2;
-    SDL_Delay( 5000 );
 
     SDL_Event e;
 
@@ -151,6 +150,8 @@ int main( int argc, char *argv[] ) {
         SDL_RenderPresent( renderer );
         //fetch
         uint16_t instruction = memory[programCounter] << 8 | memory[programCounter + 1];
+        log( "First byte: %02x, Second byte: %02x, Instruction: %04x\n",
+             memory[programCounter], memory[programCounter + 1], instruction );
         programCounter += 2;
         //decode
         uint8_t firstNibble = ( instruction & 0xF000 ) >> 12;
