@@ -1,4 +1,6 @@
+#include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
+#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -89,14 +91,17 @@ int main( int argc, char *argv[] ) {
         printf( "Program read in: %d bytes, program starts at %x\n", programIndex - startingProgramIndex, startingProgramIndex );
     }
 
-    if ( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
+    if ( SDL_Init( SDL_INIT_EVERYTHING ) < 0 ) {
         fprintf( stderr, "Could not initialize SDL2\n" );
         return 1;
     }
 
+
     SDL_Window *window = SDL_CreateWindow( "CHIP-8", SDL_WINDOWPOS_CENTERED,
                                            SDL_WINDOWPOS_CENTERED, 680, 
                                            480, 0 );
+    SDL_Renderer *renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
+    SDL_RenderClear( renderer );
 
     if ( !window ) {
         fprintf( stderr, "Could not create window\n" );
@@ -116,7 +121,21 @@ int main( int argc, char *argv[] ) {
     int pixelSize = pixelWidth < pixelHeight ? pixelWidth : pixelHeight;
     int displayWidth = pixelSize * DISPLAY_WIDTH;
     int displayHeight = pixelSize * DISPLAY_HEIGHT;
+    int displayXOffset = ( windowSurface->w - displayWidth ) / 2;
+    int displayYOffset = ( windowSurface->h - displayHeight ) / 2;
+    SDL_SetRenderDrawColor( renderer, 255, 0, 0, 255 );
+    for ( int i = 0; i < DISPLAY_WIDTH; ++i ) {
+        for ( int j = 0; j < DISPLAY_HEIGHT; ++j ) {
+            SDL_Rect r = {displayXOffset + pixelSize * i,
+                          displayYOffset + pixelSize * j,
+                          pixelSize, pixelSize};
+            //SDL_RenderFillRect( renderer, &r ); 
+            SDL_RenderDrawRect( renderer, &r );
+        }
+    }
 
+    SDL_RenderPresent( renderer );
+    SDL_Delay( 5000 );
 
     SDL_Event e;
 
