@@ -1,3 +1,5 @@
+#include <SDL2/SDL_surface.h>
+#include <SDL2/SDL_video.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,7 +89,29 @@ int main( int argc, char *argv[] ) {
         printf( "Program read in: %d bytes, program starts at %x\n", programIndex - startingProgramIndex, startingProgramIndex );
     }
 
-        
+    if ( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
+        fprintf( stderr, "Could not initialize SDL2\n" );
+        return 1;
+    }
+
+    SDL_Window *window = SDL_CreateWindow( "CHIP-8", SDL_WINDOWPOS_CENTERED,
+                                           SDL_WINDOWPOS_CENTERED, 680, 
+                                           480, 0 );
+
+    if ( !window ) {
+        fprintf( stderr, "Could not create window\n" );
+        return 1;
+    }
+
+    SDL_Surface *windowSurface = SDL_GetWindowSurface( window );
+
+    if ( !windowSurface ) {
+        fprintf( stderr, "Could not get surface from window\n" );
+        return 1;
+    }
+
+    SDL_UpdateWindowSurface( window );
+    SDL_Delay( 5000 );
 
     while ( 1 ) {
         //fetch
