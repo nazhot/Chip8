@@ -1,9 +1,14 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
-uint8_t memory[4096] = {0};
-uint8_t display[8][4] = {0};
+#define DISPLAY_WIDTH 64
+#define DISPLAY_HEIGHT 32
+#define BYTES_MEMORY 4096
+
+uint8_t memory[BYTES_MEMORY] = {0};
+uint8_t display[DISPLAY_WIDTH][DISPLAY_HEIGHT] = {0};
 uint8_t registers[16] = {0};
 uint16_t indexRegister = 0;
 uint16_t programCounter = 0;
@@ -12,15 +17,21 @@ uint8_t delayTimer = 0;
 uint8_t soundTimer = 0;
 
 void displaySprite( uint8_t optionX, uint8_t optionY, uint8_t optionN ) {
-    uint8_t xPos = registers[optionX] % 64;
-    uint8_t yPos = registers[optionY] % 32;
+    uint8_t xPos = registers[optionX] % DISPLAY_WIDTH;
+    uint8_t yPos = registers[optionY] % DISPLAY_HEIGHT;
     registers[0xF] = 0;
-    for ( int i = 0; i < optionN; ++i ) {
+    for ( int i = 0; i < optionN && yPos + i < DISPLAY_HEIGHT; ++i ) {
+        assert( indexRegister + i < BYTES_MEMORY );
         uint8_t spriteByte = memory[indexRegister + i];
-        for ( int j = 0; j < 8; ++j ) {
-            
+        for ( int j = 0; j < 8 && j + xPos < DISPLAY_WIDTH; ++j ) {
+            uint8_t spritePixel = ( spriteByte >> ( 7 - j ) ) & 1;
+            if ( spritePixel ) {
+                if ( display[xPos + j][yPos + i] ) {
+                    registers[0xF] = 1;
+                }
+                display[xPos + j][yPos + i] = !display[xPos + j][yPos + i];
+            }
         }
-        //draw sprite to display
     }
 }
 
