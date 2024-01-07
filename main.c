@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <time.h>
 #include <SDL2/SDL.h>
 
 #define DISPLAY_WIDTH 64  //pixels, standard is 64
@@ -194,48 +195,48 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
             break;
         case 0x8:
             switch ( chip->optionN ) {
-                case 0:
+                case 0x0:
                     chip->registers[chip->optionX] = chip->registers[chip->optionY];
                     break;
-                case 1:
+                case 0x1:
                     chip->registers[chip->optionX] = chip->registers[chip->optionX] |
                                                      chip->registers[chip->optionY];
                     break;
-                case 2:
+                case 0x2:
                     chip->registers[chip->optionX] = chip->registers[chip->optionX] &
                                                      chip->registers[chip->optionY];
                     break;
-                case 3:
+                case 0x3:
                     chip->registers[chip->optionX] = chip->registers[chip->optionX] ^
                                                      chip->registers[chip->optionY];
                     break;
-                case 4:
+                case 0x4:
                     //check for overflow, but still allow it to go through
                     chip->registers[0xF] = 255 - chip->registers[chip->optionX] 
                                            < chip->registers[chip->optionY];
                     chip->registers[chip->optionX] = chip->registers[chip->optionX] +
                                                      chip->registers[chip->optionY];
                     break;
-                case 5:
+                case 0x5:
                     //check for underflow, but still allow it to go through
                     chip->registers[0xF] = chip->registers[chip->optionX] >
                                            chip->registers[chip->optionY];
                     chip->registers[chip->optionX] = chip->registers[chip->optionX] -
                                                      chip->registers[chip->optionY];
                     break;
-                case 6:
+                case 0x6:
                     //chip->registers[chip->optionX] = chip->registers[chip->optionY];
                     chip->registers[0xF] = chip->registers[chip->optionX] & 1;
                     chip->registers[chip->optionX] >>= 1;
                     break;
-                case 7:
+                case 0x7:
                     //check for underflow, but still allow it to go through
                     chip->registers[0xF] = chip->registers[chip->optionY] >
                                            chip->registers[chip->optionX];
                     chip->registers[chip->optionX] = chip->registers[chip->optionY] -
                                                      chip->registers[chip->optionX];
                     break;
-                case 8:
+                case 0xE:
                     //chip->registers[chip->optionX] = chip->registers[chip->optionY];
                     chip->registers[0xF] = chip->registers[chip->optionX] & 0x8000;
                     chip->registers[chip->optionX] <<= 1;
@@ -253,8 +254,10 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
             chip->indexRegister = chip->optionNNN;
             break;
         case 0xB:
+            chip->programCounter = chip->optionNNN + chip->registers[0x0];
             break;
         case 0xC:
+            chip->registers[chip->optionX] = rand() & chip->optionNN;
             break;
         case 0xD:
             log( "Displaying sprite with X: %x, Y: %x, N: %x\n", 
@@ -270,6 +273,8 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
 }
 
 int main( int argc, char *argv[] ) {
+
+    srand( ( unsigned ) time(NULL) );
 
     struct Chip8 *chip = ch8_initialize();
     ch8_initializeFonts( chip, 0x50 );
