@@ -254,9 +254,11 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
             chip->indexRegister = chip->optionNNN;
             break;
         case 0xB:
+            //jump + constant
             chip->programCounter = chip->optionNNN + chip->registers[0x0];
             break;
         case 0xC:
+            //random number generator
             chip->registers[chip->optionX] = rand() & chip->optionNN;
             break;
         case 0xD:
@@ -266,6 +268,14 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
             ch8_displaySprite( chip );
             break;
         case 0xE:
+            switch ( chip->optionY ) {
+                case 0x9:
+                    //skip if key in VX is pressed
+                    break;
+                case 0xA:
+                    //skip if key in VX is not pressed
+                    break;
+            }
             break;
         case 0xF:
             break;
