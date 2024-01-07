@@ -424,8 +424,6 @@ int main( int argc, char *argv[] ) {
     //memory[0x206] = 0x12;
     //memory[0x207] = 0x06;
 
-    //set up all of the pixel requirements
-
     SDL_Event e;
 
     while ( 1 ) {
@@ -454,7 +452,7 @@ int main( int argc, char *argv[] ) {
                 case SDL_QUIT:
                     exit( 1 );
             }
-            ch8_drawScreen( chip );
+            //ch8_drawScreen( chip );
         }
 
         ch8_updateScreen( chip );
