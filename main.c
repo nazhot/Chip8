@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <time.h>
+#include <stdbool.h>
 #include <SDL2/SDL.h>
 
 #define DISPLAY_WIDTH 64  //pixels, standard is 64
@@ -25,6 +26,7 @@
 #endif
 
 struct Chip8 {
+    bool blocked;
     uint8_t memory[BYTES_MEMORY];
     int8_t display[DISPLAY_WIDTH][DISPLAY_HEIGHT];
     uint8_t registers[16];
@@ -133,6 +135,9 @@ void ch8_displaySprite( struct Chip8 *chip ) {
 }
 
 void ch8_fetchNextInstruction( struct Chip8 *chip ) {
+    if ( chip->blocked ) {
+        return;
+    }
     chip->currentInstruction = chip->memory[chip->programCounter] << 8 |
                                chip->memory[chip->programCounter + 1];
 
@@ -146,6 +151,9 @@ void ch8_fetchNextInstruction( struct Chip8 *chip ) {
 }
 
 void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
+    if ( chip->blocked ) {
+        return;
+    }
     switch ( chip->firstNibble ) {
         case 0x0:
             if ( chip->currentInstruction == 0x00E0 ) {
@@ -278,6 +286,41 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
             }
             break;
         case 0xF:
+            switch ( chip->optionNN ) {
+                case 0x07:
+                    chip->registers[chip->optionX] = chip->delayTimer;
+                    break;
+                case 0x15:
+                    chip->delayTimer = chip->registers[chip->optionX];
+                    break;
+                case 0x18:
+                    chip->soundTimer = chip->registers[chip->optionX];
+                    break;
+                case 0x1E:
+                    chip->indexRegister += chip->registers[chip->optionX];
+                    chip->registers[0xF] = chip->indexRegister > 0x1000;
+                    break;
+                case 0x0A:
+                    chip->blocked = 1;
+                    chip->programCounter -= 2;
+                    break;
+                case 0x29:
+                    chip->indexRegister = chip->startingFontAddress + ( chip->registers[chip->optionX] & 0x0F ) * 5;
+                    break;
+                case 0x33:
+                    chip->memory[chip->indexRegister] = chip->registers[chip->optionX] / 100;
+                    chip->memory[chip->indexRegister + 1] = chip->registers[chip->optionX] / 10 % 10;
+                    chip->memory[chip->indexRegister + 2] = chip->registers[chip->optionX] % 10;
+                    break;
+                case 0x55:
+                    for ( int i = 0; i <= chip->optionX; ++i ) {
+                        chip->memory[chip->indexRegister + i] = chip->registers[i]; 
+                    }
+                case 0x65:
+                    for ( int i = 0; i <= chip->optionX; ++i ) {
+                        chip->registers[i] = chip->memory[chip->indexRegister + i];
+                    }
+            }
             break;
     }
 }
