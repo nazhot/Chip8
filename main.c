@@ -109,6 +109,7 @@ struct Chip8* ch8_initialize() {
     memset( chip, 0, sizeof( struct Chip8 ) );
     chip->startingProgramAddress = 0x200;
     chip->programCounter = 0x200;
+    chip->screen = screen_initialize();
     return chip;
 }
 
@@ -189,6 +190,27 @@ void ch8_displaySprite( struct Chip8 *chip ) {
             }
         }
     }
+}
+
+void ch8_drawScreen( struct Chip8 *chip ) {
+    SDL_UpdateWindowSurface( chip->screen->window );
+}
+
+void ch8_updateScreen( struct Chip8 *chip ) {
+    SDL_SetRenderDrawColor( chip->screen->renderer, 255, 0, 0, 255 );
+    for ( int i = 0; i < DISPLAY_WIDTH; ++i ) {
+        for ( int j = 0; j < DISPLAY_HEIGHT; ++j ) {
+            if ( chip->display[i][j] ) { 
+                SDL_Rect r = {chip->screen->xOffset + chip->screen->pixelSize * i,
+                              chip->screen->yOffset + chip->screen->pixelSize * j,
+                              chip->screen->pixelSize, 
+                              chip->screen->pixelSize};
+                //SDL_RenderFillRect( renderer, &r ); //filled rect
+                SDL_RenderDrawRect( chip->screen->renderer, &r );   //rect outline
+            }
+        }
+    }
+    SDL_RenderPresent( chip->screen->renderer );
 }
 
 void ch8_fetchNextInstruction( struct Chip8 *chip ) {
@@ -303,7 +325,7 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
                     break;
                 case 0xE:
                     //chip->registers[chip->optionX] = chip->registers[chip->optionY];
-                    chip->registers[0xF] = chip->registers[chip->optionX] & 0x8000;
+                    chip->registers[0xF] = chip->registers[chip->optionX] & 0x80;
                     chip->registers[chip->optionX] <<= 1;
                     break;
             }
@@ -432,24 +454,10 @@ int main( int argc, char *argv[] ) {
                 case SDL_QUIT:
                     exit( 1 );
             }
-            SDL_UpdateWindowSurface( window );
+            ch8_drawScreen( chip );
         }
 
-        //draw the pixels based on display
-        SDL_SetRenderDrawColor( renderer, 255, 0, 0, 255 );
-        for ( int i = 0; i < DISPLAY_WIDTH; ++i ) {
-            for ( int j = 0; j < DISPLAY_HEIGHT; ++j ) {
-                if ( chip->display[i][j] ) { 
-                    SDL_Rect r = {displayXOffset + pixelSize * i,
-                                  displayYOffset + pixelSize * j,
-                                  pixelSize, pixelSize};
-                    //SDL_RenderFillRect( renderer, &r ); //filled rect
-                    SDL_RenderDrawRect( renderer, &r );   //rect outline
-                }
-            }
-        }
-        SDL_RenderPresent( renderer );
-
+        ch8_updateScreen( chip );
         //fetch
         ch8_fetchNextInstruction( chip ); 
         //decode
