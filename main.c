@@ -193,6 +193,54 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
             chip->registers[chip->optionX] += chip->optionNN;
             break;
         case 0x8:
+            switch ( chip->optionN ) {
+                case 0:
+                    chip->registers[chip->optionX] = chip->registers[chip->optionY];
+                    break;
+                case 1:
+                    chip->registers[chip->optionX] = chip->registers[chip->optionX] |
+                                                     chip->registers[chip->optionY];
+                    break;
+                case 2:
+                    chip->registers[chip->optionX] = chip->registers[chip->optionX] &
+                                                     chip->registers[chip->optionY];
+                    break;
+                case 3:
+                    chip->registers[chip->optionX] = chip->registers[chip->optionX] ^
+                                                     chip->registers[chip->optionY];
+                    break;
+                case 4:
+                    //check for overflow, but still allow it to go through
+                    chip->registers[0xF] = 255 - chip->registers[chip->optionX] 
+                                           < chip->registers[chip->optionY];
+                    chip->registers[chip->optionX] = chip->registers[chip->optionX] +
+                                                     chip->registers[chip->optionY];
+                    break;
+                case 5:
+                    //check for underflow, but still allow it to go through
+                    chip->registers[0xF] = chip->registers[chip->optionX] >
+                                           chip->registers[chip->optionY];
+                    chip->registers[chip->optionX] = chip->registers[chip->optionX] -
+                                                     chip->registers[chip->optionY];
+                    break;
+                case 6:
+                    //chip->registers[chip->optionX] = chip->registers[chip->optionY];
+                    chip->registers[0xF] = chip->registers[chip->optionX] & 1;
+                    chip->registers[chip->optionX] >>= 1;
+                    break;
+                case 7:
+                    //check for underflow, but still allow it to go through
+                    chip->registers[0xF] = chip->registers[chip->optionY] >
+                                           chip->registers[chip->optionX];
+                    chip->registers[chip->optionX] = chip->registers[chip->optionY] -
+                                                     chip->registers[chip->optionX];
+                    break;
+                case 8:
+                    //chip->registers[chip->optionX] = chip->registers[chip->optionY];
+                    chip->registers[0xF] = chip->registers[chip->optionX] & 0x8000;
+                    chip->registers[chip->optionX] <<= 1;
+                    break;
+            }
             break;
         case 0x9:
             if ( chip->registers[chip->optionX] != chip->registers[chip->optionY] ) {
