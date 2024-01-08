@@ -28,7 +28,6 @@
 struct Screen {
     SDL_Window *window;
     SDL_Renderer *renderer;
-    SDL_Surface *windowSurface;
     int xOffset;
     int yOffset;
     int pixelSize;
@@ -60,19 +59,17 @@ struct Screen* screen_initialize() {
         exit( 1 );
     }
     SDL_RenderClear( screen->renderer );
-
-    screen->windowSurface = SDL_GetWindowSurface( screen->window );
-    if ( !screen->windowSurface ) {
-        fprintf( stderr, "Could not get surface from window\n" );
-        exit( 1 );
-    }
-    int pixelWidth = screen->windowSurface->w / DISPLAY_WIDTH;
-    int pixelHeight = screen->windowSurface->h / DISPLAY_HEIGHT;
+    
+    int screenWidth;
+    int screenHeight;
+    SDL_GetWindowSize( screen->window, &screenWidth, &screenHeight );
+    int pixelWidth = screenWidth / DISPLAY_WIDTH;
+    int pixelHeight = screenHeight / DISPLAY_HEIGHT;
     int pixelSize = pixelWidth < pixelHeight ? pixelWidth : pixelHeight;
     int displayWidth = pixelSize * DISPLAY_WIDTH;
     int displayHeight = pixelSize * DISPLAY_HEIGHT;
-    int displayXOffset = ( screen->windowSurface->w - displayWidth ) / 2;
-    int displayYOffset = ( screen->windowSurface->h - displayHeight ) / 2;
+    int displayXOffset = ( screenWidth - displayWidth ) / 2;
+    int displayYOffset = ( screenHeight   - displayHeight ) / 2;
 
     screen->pixelSize = pixelSize;
     screen->xOffset = displayXOffset;
@@ -102,6 +99,12 @@ struct Chip8 {
     uint8_t optionN;
     uint8_t optionNN;
     uint16_t optionNNN;
+    clock_t lastDrawTime;
+    uint32_t framesPerSecond; 
+    float secondsPerFrame;
+    clock_t lastInstructionTime;
+    uint32_t instructionsPerSecond;
+    float secondsPerInstruction;
 };
 
 struct Chip8* ch8_initialize() {
@@ -109,6 +112,10 @@ struct Chip8* ch8_initialize() {
     memset( chip, 0, sizeof( struct Chip8 ) );
     chip->startingProgramAddress = 0x200;
     chip->programCounter = 0x200;
+    chip->framesPerSecond = 60;
+    chip->secondsPerFrame = 1.0 / chip->framesPerSecond;
+    chip->instructionsPerSecond = 700;
+    chip->secondsPerInstruction = 1.0 / chip->instructionsPerSecond;
     chip->screen = screen_initialize();
     return chip;
 }
