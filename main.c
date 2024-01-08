@@ -200,7 +200,7 @@ void ch8_displaySprite( struct Chip8 *chip ) {
 }
 
 void ch8_drawScreen( struct Chip8 *chip ) {
-    SDL_UpdateWindowSurface( chip->screen->window );
+    SDL_RenderPresent( chip->screen->renderer );
 }
 
 void ch8_updateScreen( struct Chip8 *chip ) {
@@ -217,7 +217,6 @@ void ch8_updateScreen( struct Chip8 *chip ) {
             }
         }
     }
-    SDL_RenderPresent( chip->screen->renderer );
 }
 
 void ch8_fetchNextInstruction( struct Chip8 *chip ) {
@@ -463,6 +462,7 @@ int main( int argc, char *argv[] ) {
         }
 
         ch8_updateScreen( chip );
+        ch8_drawScreen( chip );
         //fetch
         ch8_fetchNextInstruction( chip ); 
         //decode

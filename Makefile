@@ -1,3 +1,6 @@
 all:
 	gcc main.c -o main -lSDL2
+
+run:
+	gcc main.c -o main -lSDL2
 	./main
