@@ -266,6 +266,7 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
                 ch8_clearScreen( chip );
             } else if ( chip->currentInstruction == 0x00EE ) {
                 assert( chip->stackAddress > 0 );
+                log( "Returning to last stack address: %x\n", chip->stack[chip->stackAddress - 1] );
                 chip->programCounter = chip->stack[--chip->stackAddress];
             }
             break;
@@ -277,7 +278,8 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
             break;
         case 0x2:
             assert( chip->stackAddress < STACK_SIZE ); 
-            chip->stack[chip->stackAddress++] = chip->programCounter - 2;
+            log( "Pushing %x to stack, jumping to  %x\n", chip->programCounter, chip->optionNNN );
+            chip->stack[chip->stackAddress++] = chip->programCounter;
             chip->programCounter = chip->optionNNN;
             break;
         case 0x3:
@@ -437,7 +439,7 @@ int main( int argc, char *argv[] ) {
 
     struct Chip8 *chip = ch8_initialize();
     ch8_initializeFonts( chip, 0x50 );
-    ch8_loadFileIntoMemory( chip, "roms/IBM_Logo.ch8" );
+    ch8_loadFileIntoMemory( chip, "roms/test_opcode.ch8" );
 
     //Test program, just drawing 0 at the top left of the screen
     //memory[0x200] = 0x00;
