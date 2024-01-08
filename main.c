@@ -79,7 +79,8 @@ struct Screen* screen_initialize() {
 }
 
 struct Chip8 {
-    bool blocked;
+    bool keyBlocked;
+    bool instBlocked;
     struct Screen *screen;
     uint8_t memory[BYTES_MEMORY];
     int8_t display[DISPLAY_WIDTH][DISPLAY_HEIGHT];
@@ -99,10 +100,10 @@ struct Chip8 {
     uint8_t optionN;
     uint8_t optionNN;
     uint16_t optionNNN;
-    clock_t lastDrawTime;
+    float lastDrawTime;
     uint32_t framesPerSecond; 
     float secondsPerFrame;
-    clock_t lastInstructionTime;
+    float lastInstructionTime;
     uint32_t instructionsPerSecond;
     float secondsPerInstruction;
 };
@@ -200,7 +201,11 @@ void ch8_displaySprite( struct Chip8 *chip ) {
 }
 
 void ch8_drawScreen( struct Chip8 *chip ) {
-    SDL_RenderPresent( chip->screen->renderer );
+    float currentTime = clock() * 1.0 / CLOCKS_PER_SEC;
+    if ( currentTime - chip->lastDrawTime >= chip->secondsPerFrame ) {
+        chip->lastDrawTime = currentTime;
+        SDL_RenderPresent( chip->screen->renderer );
+    }
 }
 
 void ch8_updateScreen( struct Chip8 *chip ) {
@@ -220,7 +225,14 @@ void ch8_updateScreen( struct Chip8 *chip ) {
 }
 
 void ch8_fetchNextInstruction( struct Chip8 *chip ) {
-    if ( chip->blocked ) {
+    if ( chip->keyBlocked ) {
+        return;
+    }
+    float currentTime = clock() * 1.0 / CLOCKS_PER_SEC;
+    if ( currentTime - chip->lastInstructionTime >= chip->secondsPerInstruction ) {
+        chip->lastInstructionTime = currentTime;
+        chip->instBlocked = false;
+    } else  {
         return;
     }
     chip->currentInstruction = chip->memory[chip->programCounter] << 8 |
@@ -236,9 +248,16 @@ void ch8_fetchNextInstruction( struct Chip8 *chip ) {
 }
 
 void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
-    if ( chip->blocked ) {
+    if ( chip->keyBlocked ) {
         return;
     }
+
+    if ( chip->instBlocked ) {
+        return;
+    }
+
+    chip->instBlocked = true;
+
     switch ( chip->firstNibble ) {
         case 0x0:
             if ( chip->currentInstruction == 0x00E0 ) {
@@ -386,7 +405,7 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
                     chip->registers[0xF] = chip->indexRegister > 0x1000;
                     break;
                 case 0x0A:
-                    chip->blocked = 1;
+                    chip->keyBlocked = 1;
                     chip->programCounter -= 2;
                     break;
                 case 0x29:
