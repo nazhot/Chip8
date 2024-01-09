@@ -10,6 +10,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include <SDL2/SDL.h>
+#include "portaudio.h"
 
 #define DISPLAY_WIDTH 64  //pixels, standard is 64
 #define DISPLAY_HEIGHT 32 //pixels, standard is 32
@@ -209,6 +210,7 @@ void ch8_drawScreen( struct Chip8 *chip ) {
             chip->delayTimer--;
         }
         if ( chip->soundTimer > 0 ) {
+            fprintf( stdout, "\a" );
             chip->soundTimer--;
         }
     }
