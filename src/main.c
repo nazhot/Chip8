@@ -1,19 +1,12 @@
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_surface.h>
-#include <SDL2/SDL_timer.h>
-#include <SDL2/SDL_video.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <time.h>
 #include <stdbool.h>
-#include <SDL2/SDL.h>
+#include "screen.h"
 #include "portaudio.h"
 
-#define DISPLAY_WIDTH 64  //pixels, standard is 64
-#define DISPLAY_HEIGHT 32 //pixels, standard is 32
 #define BYTES_MEMORY 4096 //standard is 4096
 #define STACK_SIZE 15 //standard is 16
 
@@ -26,58 +19,7 @@
 #define log(...) //if not debugging, don't printf
 #endif
 
-struct Screen {
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    int xOffset;
-    int yOffset;
-    int pixelSize;
-};
 
-struct Screen* screen_initialize() {
-    struct Screen *screen = malloc( sizeof( struct Screen ) );
-    if ( !screen ) {
-        fprintf( stderr, "Could not create new struct Screen\n" );
-        exit( 1 );
-    }
-    if ( SDL_Init( SDL_INIT_EVERYTHING ) < 0 ) {
-        fprintf( stderr, "Could not initialize SDL2\n" );
-        exit( 1 );
-    }
-
-    screen->window = SDL_CreateWindow( "CHIP-8", SDL_WINDOWPOS_CENTERED,
-                                           SDL_WINDOWPOS_CENTERED, 680, 
-                                           480, 0 );
-    if ( !screen->window ) {
-        fprintf( stderr, "Could not create window\n" );
-        exit( 1 );
-    }
-
-    screen->renderer = SDL_CreateRenderer( screen->window, -1, 
-                                                 SDL_RENDERER_ACCELERATED );
-    if ( !screen->renderer ) {
-        fprintf( stderr, "Could not create renderer\n" );
-        exit( 1 );
-    }
-    SDL_RenderClear( screen->renderer );
-    
-    int screenWidth;
-    int screenHeight;
-    SDL_GetWindowSize( screen->window, &screenWidth, &screenHeight );
-    int pixelWidth = screenWidth / DISPLAY_WIDTH;
-    int pixelHeight = screenHeight / DISPLAY_HEIGHT;
-    int pixelSize = pixelWidth < pixelHeight ? pixelWidth : pixelHeight;
-    int displayWidth = pixelSize * DISPLAY_WIDTH;
-    int displayHeight = pixelSize * DISPLAY_HEIGHT;
-    int displayXOffset = ( screenWidth - displayWidth ) / 2;
-    int displayYOffset = ( screenHeight   - displayHeight ) / 2;
-
-    screen->pixelSize = pixelSize;
-    screen->xOffset = displayXOffset;
-    screen->yOffset = displayYOffset;
-
-    return screen;
-}
 
 struct Chip8 {
     bool keyBlocked;
