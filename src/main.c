@@ -60,7 +60,7 @@ struct Chip8* ch8_initialize() {
     chip->secondsPerFrame = 1.0 / chip->framesPerSecond;
     chip->instructionsPerSecond = 700;
     chip->secondsPerInstruction = 1.0 / chip->instructionsPerSecond;
-    chip->screen = screen_initialize();
+    chip->screen = screen_initialize(680, 480);
     return chip;
 }
 

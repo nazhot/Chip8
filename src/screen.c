@@ -1,6 +1,6 @@
 #include "screen.h"
 
-struct Screen* screen_initialize() {
+struct Screen* screen_initialize( int windowWidth, int windowHeight ) {
     struct Screen *screen = malloc( sizeof( struct Screen ) );
     if ( !screen ) {
         fprintf( stderr, "Could not create new struct Screen\n" );
@@ -12,8 +12,8 @@ struct Screen* screen_initialize() {
     }
 
     screen->window = SDL_CreateWindow( "CHIP-8", SDL_WINDOWPOS_CENTERED,
-                                           SDL_WINDOWPOS_CENTERED, 680, 
-                                           480, 0 );
+                                        SDL_WINDOWPOS_CENTERED, windowWidth, 
+                                        windowHeight, 0 );
     if ( !screen->window ) {
         fprintf( stderr, "Could not create window\n" );
         exit( 1 );
@@ -27,16 +27,13 @@ struct Screen* screen_initialize() {
     }
     SDL_RenderClear( screen->renderer );
     
-    int screenWidth;
-    int screenHeight;
-    SDL_GetWindowSize( screen->window, &screenWidth, &screenHeight );
-    int pixelWidth = screenWidth / DISPLAY_WIDTH;
-    int pixelHeight = screenHeight / DISPLAY_HEIGHT;
+    int pixelWidth = windowWidth / DISPLAY_WIDTH;
+    int pixelHeight = windowHeight / DISPLAY_HEIGHT;
     int pixelSize = pixelWidth < pixelHeight ? pixelWidth : pixelHeight;
     int displayWidth = pixelSize * DISPLAY_WIDTH;
     int displayHeight = pixelSize * DISPLAY_HEIGHT;
-    int displayXOffset = ( screenWidth - displayWidth ) / 2;
-    int displayYOffset = ( screenHeight   - displayHeight ) / 2;
+    int displayXOffset = ( windowWidth - displayWidth ) / 2;
+    int displayYOffset = ( windowHeight   - displayHeight ) / 2;
 
     screen->pixelSize = pixelSize;
     screen->xOffset = displayXOffset;

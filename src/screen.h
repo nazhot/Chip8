@@ -17,6 +17,8 @@
 struct Screen {
     SDL_Window *window;
     SDL_Renderer *renderer;
+    int width;
+    int height;
     int xOffset;
     int yOffset;
     int pixelSize;
@@ -31,6 +33,6 @@ struct Screen {
  *
  * @return newly created Screen
  */
-struct Screen* screen_initialize(); 
+struct Screen* screen_initialize( int windowWidth, int windowHeight ); 
 
 #endif
