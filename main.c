@@ -205,6 +205,12 @@ void ch8_drawScreen( struct Chip8 *chip ) {
     if ( currentTime - chip->lastDrawTime >= chip->secondsPerFrame ) {
         chip->lastDrawTime = currentTime;
         SDL_RenderPresent( chip->screen->renderer );
+        if ( chip->delayTimer > 0 ) { //TODO: move to their own function(s)
+            chip->delayTimer--;
+        }
+        if ( chip->soundTimer > 0 ) {
+            chip->soundTimer--;
+        }
     }
 }
 
