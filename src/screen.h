@@ -1,5 +1,5 @@
-#ifndef CH8_H
-#define CH8_H
+#ifndef SCREEN_H
+#define SCREEN_H
 #include <SDL2/SDL.h>
 #define DISPLAY_WIDTH 64  //pixels, standard is 64
 #define DISPLAY_HEIGHT 32 //pixels, standard is 32
