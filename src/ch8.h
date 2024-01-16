@@ -156,11 +156,24 @@ void ch8_drawScreen( struct Chip8 *chip );
  * @param chip Chip8 to update the Screen of
  */
 void ch8_updateScreen( struct Chip8 *chip );
+
+/*
+ * Pull the next instruction from memory of the Chip8
+ *
+ * An instruction is made up of 2 consecutive 8-bit memory values, combined into
+ * one 16-bit instruction.
+ *
+ * @param chip Chip8 to pull the instruction from
+ */
 void ch8_fetchNextInstruction( struct Chip8 *chip );
+
+/*
+ * Decode the instruction, and execute it
+ *
+ * With every instruction fetched, the chip will also set up all of the options
+ * for that 16-bit value, even if they aren't used.
+ *
+ * @param chip Chip8 to decode/execute the instruction from
+ */
 void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip );
-
-
-
-
-
 #endif
