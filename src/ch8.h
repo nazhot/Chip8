@@ -59,8 +59,39 @@ struct Chip8 {
     float secondsPerInstruction;
 };
 
+/*
+ * Set up the defaults for Chip8
+ *
+ * Non-zero defaults:
+ * - startingProgramAddress/programCounter, 0x200
+ * - framesPerSecond, 60
+ * - instructionsPerSecond, 700
+ * This function also initializes a Screen, with a default size of 64x32
+ *
+ * @return pointer to the intialized Chip8
+ */
 struct Chip8* ch8_initialize();
+
+/*
+ * Load default fonts into Chip8 memory
+ *
+ * Fonts are stored in an array with the function itself.
+ * TODO: update so that font array is passed in so it can be changed
+ *
+ * @param chip            Chip8 to add fonts to
+ * @param startingAddress address that the first font will start at
+ */
 void ch8_initializeFonts( struct Chip8 *chip, const uint16_t startingAddress );
+
+/*
+ * Read a binary file into the memory of a Chip8 to use as a program
+ *
+ * The program will start being written at startingProgramAddress
+ * TODO: add in protection against overflow
+ *
+ * @param chip     Chip8 to add program to
+ * @param filePath path to the file that holds the program
+ */
 void ch8_loadFileIntoMemory( struct Chip8 *chip, const char filePath[] );
 void ch8_clearMemory( struct Chip8 *chip );
 void ch8_clearProgramMemory( struct Chip8 *chip );
