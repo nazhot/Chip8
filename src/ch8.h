@@ -133,7 +133,28 @@ void ch8_clearScreen( struct Chip8 *chip );
  * @param chip Chip8 to display a sprite on the Screen of
  */
 void ch8_displaySprite( struct Chip8 *chip );
+
+/*
+ * Update the SDL Window on the user's computer screen
+ *
+ * Uses the display data to set all of the pixels. This will also check to make
+ * sure that the frame rate is being adhered to. Currently the delay/sound
+ * timers are tied to this since they all are locked to 60 per second.
+ * TODO: remove the tie to delay/sound timers
+ *
+ * @param chip Chip8 to draw the Screen of
+ */
 void ch8_drawScreen( struct Chip8 *chip );
+
+/*
+ * Draw the pixels to the rendering buffer
+ *
+ * This will just draw the needed rectangles to the buffer in SDL, this will not
+ * actually draw the Screen to the computer screen.
+ * TODO: determine if this should be static
+ *
+ * @param chip Chip8 to update the Screen of
+ */
 void ch8_updateScreen( struct Chip8 *chip );
 void ch8_fetchNextInstruction( struct Chip8 *chip );
 void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip );
