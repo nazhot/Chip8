@@ -93,9 +93,45 @@ void ch8_initializeFonts( struct Chip8 *chip, const uint16_t startingAddress );
  * @param filePath path to the file that holds the program
  */
 void ch8_loadFileIntoMemory( struct Chip8 *chip, const char filePath[] );
+
+/*
+ * Set ALL of the memory within the Chip8 to 0x0
+ *
+ * @param chip Chip8 to clear the memory of
+ */
 void ch8_clearMemory( struct Chip8 *chip );
+
+/*
+ * Set only the memory where programs are stored of Chip8 to 0x0
+ *
+ * @param chip Chip8 to clear the memory of
+ */
 void ch8_clearProgramMemory( struct Chip8 *chip );
+
+/*
+ * Reset all of the elements in display to 0x0
+ *
+ * This will also call the needed SDL function to update the window.
+ * TODO: determine if this should be static
+ *
+ * @param chip Chip8 to clear the screen of
+ */
 void ch8_clearScreen( struct Chip8 *chip );
+
+/*
+ * Display a sprite to the Screen
+ *
+ * Only other way to interact with the window other than just clearing it. The
+ * indexRegister holds the first address of the sprite data, optionX refers to
+ * the register with the X position and optionY refers to the register with the 
+ * Y position (X,Y of the top left corner of the sprite). Each bit of the 8-bit
+ * is used to manipulate a pixel of the display: a 0 means leave the pixel
+ * alone, a 1 means to flip it (if it was being shown, hide it, if it was
+ * hidden, show it). OptionN contains how many rows should be drawn, each row
+ * is incremented from indexRegister (indexRegister itself is not incremented).
+ * 
+ * @param chip Chip8 to display a sprite on the Screen of
+ */
 void ch8_displaySprite( struct Chip8 *chip );
 void ch8_drawScreen( struct Chip8 *chip );
 void ch8_updateScreen( struct Chip8 *chip );
