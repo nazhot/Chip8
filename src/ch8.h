@@ -118,6 +118,7 @@ void ch8_clearProgramMemory( struct Chip8 *chip );
  */
 void ch8_clearScreen( struct Chip8 *chip );
 
+void ch8_dumpMemory( struct Chip8 *chip );
 /*
  * Display a sprite to the Screen
  *

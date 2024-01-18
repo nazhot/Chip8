@@ -76,6 +76,189 @@ void ch8_clearScreen( struct Chip8 *chip ) {
     }
 }
 
+void ch8_dumpMemory( struct Chip8 *chip ) {
+    uint16_t lastProgramCounter = chip->programCounter;
+    chip->programCounter = chip->startingProgramAddress;
+    printf( "------Memory Dump------\n" );
+    while ( chip->programCounter < BYTES_MEMORY ) {
+        ch8_fetchNextInstruction( chip );
+        printf( "First nibble: %x ", chip->firstNibble );
+        switch ( chip->firstNibble ) {
+            case 0x0:
+                if ( chip->currentInstruction == 0x00E0 ) {
+                    //clear screen
+                    printf( "(Clear Screen)\n" );
+                } else if ( chip->currentInstruction == 0x00EE ) {
+                    assert( chip->stackAddress > 0 );
+                    printf( "(Return to last stack address)\n" );
+                    //commented out because techinically nothing will be in the stack
+                    //printf( "\tStack Index: %u\n", chip->stackAddress - 1 );
+                    //printf( "\tStack Address: %x\n", chip->stack[chip->stackAddress - 1] );
+                }
+                break;
+            case 0x1:
+                //jump to address
+                printf( "(Jump to address)\n" );
+                printf( "\tNNN (address): %x\n", chip->optionNNN );
+                break;
+            case 0x2:
+                assert( chip->stackAddress < STACK_SIZE ); 
+                log( "Pushing %x to stack, jumping to  %x\n", chip->programCounter, chip->optionNNN );
+                chip->stack[chip->stackAddress++] = chip->programCounter;
+                chip->programCounter = chip->optionNNN;
+                break;
+            case 0x3:
+                if ( chip->registers[chip->optionX] == chip->optionNN ) {
+                    chip->programCounter += 2;
+                }
+                break;
+            case 0x4:
+                if ( chip->registers[chip->optionX] != chip->optionNN ) {
+                    chip->programCounter += 2;
+                }
+                break;
+            case 0x5:
+                if ( chip->registers[chip->optionX] == chip->registers[chip->optionY] ) {
+                    chip->programCounter += 2;
+                }
+                break;
+            case 0x6:
+                //set register
+                log( "Setting register %x to %x\n", chip->optionX, chip->optionNN );
+                chip->registers[chip->optionX] = chip->optionNN;
+                break;
+            case 0x7:
+                //add to register
+                log( "Adding %x to register %x\n", chip->optionNN, chip->optionX );
+                chip->registers[chip->optionX] += chip->optionNN;
+                break;
+            case 0x8:
+                switch ( chip->optionN ) {
+                    case 0x0:
+                        chip->registers[chip->optionX] = chip->registers[chip->optionY];
+                        break;
+                    case 0x1:
+                        chip->registers[chip->optionX] = chip->registers[chip->optionX] |
+                                                         chip->registers[chip->optionY];
+                        break;
+                    case 0x2:
+                        chip->registers[chip->optionX] = chip->registers[chip->optionX] &
+                                                         chip->registers[chip->optionY];
+                        break;
+                    case 0x3:
+                        chip->registers[chip->optionX] = chip->registers[chip->optionX] ^
+                                                         chip->registers[chip->optionY];
+                        break;
+                    case 0x4:
+                        //check for overflow, but still allow it to go through
+                        chip->registers[0xF] = 255 - chip->registers[chip->optionX] 
+                                               < chip->registers[chip->optionY];
+                        chip->registers[chip->optionX] = chip->registers[chip->optionX] +
+                                                         chip->registers[chip->optionY];
+                        break;
+                    case 0x5:
+                        //check for underflow, but still allow it to go through
+                        chip->registers[0xF] = chip->registers[chip->optionX] >
+                                               chip->registers[chip->optionY];
+                        chip->registers[chip->optionX] = chip->registers[chip->optionX] -
+                                                         chip->registers[chip->optionY];
+                        break;
+                    case 0x6:
+                        //chip->registers[chip->optionX] = chip->registers[chip->optionY];
+                        chip->registers[0xF] = chip->registers[chip->optionX] & 1;
+                        chip->registers[chip->optionX] >>= 1;
+                        break;
+                    case 0x7:
+                        //check for underflow, but still allow it to go through
+                        chip->registers[0xF] = chip->registers[chip->optionY] >
+                                               chip->registers[chip->optionX];
+                        chip->registers[chip->optionX] = chip->registers[chip->optionY] -
+                                                         chip->registers[chip->optionX];
+                        break;
+                    case 0xE:
+                        //chip->registers[chip->optionX] = chip->registers[chip->optionY];
+                        chip->registers[0xF] = chip->registers[chip->optionX] & 0x80;
+                        chip->registers[chip->optionX] <<= 1;
+                        break;
+                }
+                break;
+            case 0x9:
+                if ( chip->registers[chip->optionX] != chip->registers[chip->optionY] ) {
+                    chip->programCounter += 2;
+                }
+                break;
+            case 0xA:
+                //set index register
+                log( "Setting index register to %x\n", chip->optionNN );
+                chip->indexRegister = chip->optionNNN;
+                break;
+            case 0xB:
+                //jump + constant
+                chip->programCounter = chip->optionNNN + chip->registers[0x0];
+                break;
+            case 0xC:
+                //random number generator
+                chip->registers[chip->optionX] = rand() & chip->optionNN;
+                break;
+            case 0xD:
+                log( "Displaying sprite with X: %x, Y: %x, N: %x\n", 
+                        chip->registers[chip->optionX],
+                        chip->registers[chip->optionY], chip->optionN );
+                ch8_displaySprite( chip );
+                break;
+            case 0xE:
+                switch ( chip->optionY ) {
+                    case 0x9:
+                        //skip if key in VX is pressed
+                        break;
+                    case 0xA:
+                        //skip if key in VX is not pressed
+                        break;
+                }
+                break;
+            case 0xF:
+                switch ( chip->optionNN ) {
+                    case 0x07:
+                        chip->registers[chip->optionX] = chip->delayTimer;
+                        break;
+                    case 0x15:
+                        chip->delayTimer = chip->registers[chip->optionX];
+                        break;
+                    case 0x18:
+                        chip->soundTimer = chip->registers[chip->optionX];
+                        break;
+                    case 0x1E:
+                        chip->indexRegister += chip->registers[chip->optionX];
+                        chip->registers[0xF] = chip->indexRegister > 0x1000;
+                        break;
+                    case 0x0A:
+                        chip->keyBlocked = 1;
+                        chip->programCounter -= 2;
+                        break;
+                    case 0x29:
+                        chip->indexRegister = chip->startingFontAddress + ( chip->registers[chip->optionX] & 0x0F ) * 5;
+                        break;
+                    case 0x33:
+                        chip->memory[chip->indexRegister] = chip->registers[chip->optionX] / 100;
+                        chip->memory[chip->indexRegister + 1] = chip->registers[chip->optionX] / 10 % 10;
+                        chip->memory[chip->indexRegister + 2] = chip->registers[chip->optionX] % 10;
+                        break;
+                    case 0x55:
+                        for ( int i = 0; i <= chip->optionX; ++i ) {
+                            chip->memory[chip->indexRegister + i] = chip->registers[i]; 
+                        }
+                        break;
+                    case 0x65:
+                        for ( int i = 0; i <= chip->optionX; ++i ) {
+                            chip->registers[i] = chip->memory[chip->indexRegister + i];
+                        }
+                        break;
+                }
+                break;
+        }
+    }
+}
+
 void ch8_displaySprite( struct Chip8 *chip ) {
     uint8_t xPos = chip->registers[chip->optionX] % DISPLAY_WIDTH;
     uint8_t yPos = chip->registers[chip->optionY] % DISPLAY_HEIGHT;
