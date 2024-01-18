@@ -57,6 +57,8 @@ struct Chip8 {
     float lastInstructionTime; //time in seconds of last instruction execution
     uint32_t instructionsPerSecond;
     float secondsPerInstruction;
+    bool keyPressed;
+    uint8_t key;
 };
 
 /*

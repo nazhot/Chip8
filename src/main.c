@@ -48,8 +48,17 @@ int main( int argc, char *argv[] ) {
         //this is in case STEP is 0, still allowing user to quit
         while ( SDL_PollEvent( &e ) > 0 ) {
             switch ( e.type ) {
+                case SDL_KEYDOWN:
+                    chip->keyPressed = true;
+                    printf( "%i\n", e.key.keysym.scancode );
+                    printf( "%i\n", e.key.keysym.sym );
+                    break;
+                case SDL_KEYUP:
+                    chip->keyPressed = false;
+                    break;
                 case SDL_QUIT:
                     exit( 1 );
+                    break;
             }
             //ch8_drawScreen( chip );
         }

@@ -484,9 +484,18 @@ void ch8_decodeAndExecuteCurrentInstruction( struct Chip8 *chip ) {
             switch ( chip->optionY ) {
                 case 0x9:
                     //skip if key in VX is pressed
+                    if ( !chip->keyPressed ) {
+                        break; 
+                    }
+                    if ( chip->key == chip->registers[chip->optionX] ) {
+                        chip->programCounter += 2;
+                    }
                     break;
                 case 0xA:
                     //skip if key in VX is not pressed
+                    if ( chip->keyPressed && chip->key != chip->registers[chip->optionX] ) {
+                        chip->programCounter += 2;
+                    }
                     break;
             }
             break;
