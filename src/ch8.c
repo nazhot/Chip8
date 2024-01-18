@@ -123,13 +123,13 @@ void ch8_dumpMemory( struct Chip8 *chip ) {
                 //set register
                 printf( "(Set Register)\n" );
                 printf( "\tRegister: %x\n", chip->optionX );
-                printf( "\tValue: %u\n", chip->optionNN );
+                printf( "\tValue: %x\n", chip->optionNN );
                 break;
             case 0x7:
                 //add to register
                 printf( "(Add to Register)\n" );
                 printf( "\tRegister: %x\n", chip->optionX );
-                printf( "\tValue: %u\n", chip->optionNN );
+                printf( "\tValue: %x\n", chip->optionNN );
                 break;
             case 0x8:
                 printf( "(Register Operation)\n" );
@@ -144,92 +144,73 @@ void ch8_dumpMemory( struct Chip8 *chip ) {
                         printf( "(OR)\n" );
                         printf( "\tRegister 1 (Set): %x\n", chip->optionX );
                         printf( "\tRegister 2: %x\n", chip->optionY );
-                        chip->registers[chip->optionX] = chip->registers[chip->optionX] |
-                                                         chip->registers[chip->optionY];
                         break;
                     case 0x2:
                         printf( "(AND)\n" );
                         printf( "\tRegister 1 (Set): %x\n", chip->optionX );
                         printf( "\tRegister 2: %x\n", chip->optionY );
-                        chip->registers[chip->optionX] = chip->registers[chip->optionX] &
-                                                         chip->registers[chip->optionY];
                         break;
                     case 0x3:
                         printf( "(XOR)\n" );
                         printf( "\tRegister 1 (Set): %x\n", chip->optionX );
                         printf( "\tRegister 2: %x\n", chip->optionY );
-                        chip->registers[chip->optionX] = chip->registers[chip->optionX] ^
-                                                         chip->registers[chip->optionY];
                         break;
                     case 0x4:
                         //check for overflow, but still allow it to go through
                         printf( "(ADD [Overflow Allowed])\n" );
                         printf( "\tRegister 1 (Set): %x\n", chip->optionX );
                         printf( "\tRegister 2: %x\n", chip->optionY );
-                        chip->registers[0xF] = 255 - chip->registers[chip->optionX] 
-                                               < chip->registers[chip->optionY];
-                        chip->registers[chip->optionX] = chip->registers[chip->optionX] +
-                                                         chip->registers[chip->optionY];
                         break;
                     case 0x5:
                         //check for underflow, but still allow it to go through
                         printf( "(SUBTRACT [Underflow Allowed])\n" );
                         printf( "\tRegister 1 (Set): %x\n", chip->optionX );
                         printf( "\tRegister 2: %x\n", chip->optionY );
-                        chip->registers[0xF] = chip->registers[chip->optionX] >
-                                               chip->registers[chip->optionY];
-                        chip->registers[chip->optionX] = chip->registers[chip->optionX] -
-                                                         chip->registers[chip->optionY];
                         break;
                     case 0x6:
                         //chip->registers[chip->optionX] = chip->registers[chip->optionY];
                         printf( "(SHIFT RIGHT)\n" );
                         printf( "\tRegister: %x\n", chip->optionX );
-                        chip->registers[0xF] = chip->registers[chip->optionX] & 1;
-                        chip->registers[chip->optionX] >>= 1;
                         break;
                     case 0x7:
                         //check for underflow, but still allow it to go through
                         printf( "(SUBTRACT [Underflow Allowed])\n" );
                         printf( "\tRegister 1: %x\n", chip->optionY );
                         printf( "\tRegister 2 (Set): %x\n", chip->optionX );
-                        chip->registers[0xF] = chip->registers[chip->optionY] >
-                                               chip->registers[chip->optionX];
-                        chip->registers[chip->optionX] = chip->registers[chip->optionY] -
-                                                         chip->registers[chip->optionX];
                         break;
                     case 0xE:
                         //chip->registers[chip->optionX] = chip->registers[chip->optionY];
                         printf( "(SHIFT LEFT)\n" );
                         printf( "\tRegister: %x\n", chip->optionX );
-                        chip->registers[0xF] = chip->registers[chip->optionX] & 0x80;
-                        chip->registers[chip->optionX] <<= 1;
                         break;
                 }
                 break;
             case 0x9:
-                if ( chip->registers[chip->optionX] != chip->registers[chip->optionY] ) {
-                    chip->programCounter += 2;
-                }
+                printf( "(Skip Next Instruction [Register Value != Register Value])\n" );
+                printf( "\tRegister 1: %x\n", chip->optionX );
+                printf( "\tRegister 2: %x\n", chip->optionY );
                 break;
             case 0xA:
                 //set index register
-                log( "Setting index register to %x\n", chip->optionNN );
-                chip->indexRegister = chip->optionNNN;
+                printf( "(Set Index Register)\n" );
+                printf( "\tValue: %x\n", chip->optionNN );
                 break;
             case 0xB:
                 //jump + constant
-                chip->programCounter = chip->optionNNN + chip->registers[0x0];
+                printf( "(Jump [With Constant])\n" );
+                printf( "\tAddress: %x\n", chip->optionNNN );
                 break;
             case 0xC:
                 //random number generator
-                chip->registers[chip->optionX] = rand() & chip->optionNN;
+                printf( "(Random Number)\n" );
+                printf( "\tRegister (Set): %x\n", chip->optionX );
+                printf( "\tValue (AND-ed): %x\n", chip->optionNN );
                 break;
             case 0xD:
-                log( "Displaying sprite with X: %x, Y: %x, N: %x\n", 
-                        chip->registers[chip->optionX],
-                        chip->registers[chip->optionY], chip->optionN );
-                ch8_displaySprite( chip );
+                printf( "(Display Sprite)\n" );
+                printf( "\tRegister with xPos: %x\n", chip->optionX );
+                printf( "\tRegister with yPos: %x\n", chip->optionY );
+                printf( "\tRows: %u\n", chip->optionN );
                 break;
             case 0xE:
                 switch ( chip->optionY ) {
@@ -282,6 +263,7 @@ void ch8_dumpMemory( struct Chip8 *chip ) {
                 break;
         }
     }
+    chip->programCounter = lastProgramCounter;
 }
 
 void ch8_displaySprite( struct Chip8 *chip ) {
