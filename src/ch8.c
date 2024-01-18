@@ -132,24 +132,40 @@ void ch8_dumpMemory( struct Chip8 *chip ) {
                 printf( "\tValue: %u\n", chip->optionNN );
                 break;
             case 0x8:
+                printf( "(Register Operation)\n" );
+                printf( "N: %x ", chip->optionN );
                 switch ( chip->optionN ) {
                     case 0x0:
-                        chip->registers[chip->optionX] = chip->registers[chip->optionY];
+                        printf( "(Set)\n" );
+                        printf( "\tTarget Register: %x\n", chip->optionX );
+                        printf( "\tFrom Register: %x\n", chip->optionY );
                         break;
                     case 0x1:
+                        printf( "(OR)\n" );
+                        printf( "\tRegister 1 (Set): %x\n", chip->optionX );
+                        printf( "\tRegister 2: %x\n", chip->optionY );
                         chip->registers[chip->optionX] = chip->registers[chip->optionX] |
                                                          chip->registers[chip->optionY];
                         break;
                     case 0x2:
+                        printf( "(AND)\n" );
+                        printf( "\tRegister 1 (Set): %x\n", chip->optionX );
+                        printf( "\tRegister 2: %x\n", chip->optionY );
                         chip->registers[chip->optionX] = chip->registers[chip->optionX] &
                                                          chip->registers[chip->optionY];
                         break;
                     case 0x3:
+                        printf( "(XOR)\n" );
+                        printf( "\tRegister 1 (Set): %x\n", chip->optionX );
+                        printf( "\tRegister 2: %x\n", chip->optionY );
                         chip->registers[chip->optionX] = chip->registers[chip->optionX] ^
                                                          chip->registers[chip->optionY];
                         break;
                     case 0x4:
                         //check for overflow, but still allow it to go through
+                        printf( "(ADD [Overflow Allowed])\n" );
+                        printf( "\tRegister 1 (Set): %x\n", chip->optionX );
+                        printf( "\tRegister 2: %x\n", chip->optionY );
                         chip->registers[0xF] = 255 - chip->registers[chip->optionX] 
                                                < chip->registers[chip->optionY];
                         chip->registers[chip->optionX] = chip->registers[chip->optionX] +
@@ -157,6 +173,9 @@ void ch8_dumpMemory( struct Chip8 *chip ) {
                         break;
                     case 0x5:
                         //check for underflow, but still allow it to go through
+                        printf( "(SUBTRACT [Underflow Allowed])\n" );
+                        printf( "\tRegister 1 (Set): %x\n", chip->optionX );
+                        printf( "\tRegister 2: %x\n", chip->optionY );
                         chip->registers[0xF] = chip->registers[chip->optionX] >
                                                chip->registers[chip->optionY];
                         chip->registers[chip->optionX] = chip->registers[chip->optionX] -
@@ -164,11 +183,16 @@ void ch8_dumpMemory( struct Chip8 *chip ) {
                         break;
                     case 0x6:
                         //chip->registers[chip->optionX] = chip->registers[chip->optionY];
+                        printf( "(SHIFT RIGHT)\n" );
+                        printf( "\tRegister: %x\n", chip->optionX );
                         chip->registers[0xF] = chip->registers[chip->optionX] & 1;
                         chip->registers[chip->optionX] >>= 1;
                         break;
                     case 0x7:
                         //check for underflow, but still allow it to go through
+                        printf( "(SUBTRACT [Underflow Allowed])\n" );
+                        printf( "\tRegister 1: %x\n", chip->optionY );
+                        printf( "\tRegister 2 (Set): %x\n", chip->optionX );
                         chip->registers[0xF] = chip->registers[chip->optionY] >
                                                chip->registers[chip->optionX];
                         chip->registers[chip->optionX] = chip->registers[chip->optionY] -
@@ -176,6 +200,8 @@ void ch8_dumpMemory( struct Chip8 *chip ) {
                         break;
                     case 0xE:
                         //chip->registers[chip->optionX] = chip->registers[chip->optionY];
+                        printf( "(SHIFT LEFT)\n" );
+                        printf( "\tRegister: %x\n", chip->optionX );
                         chip->registers[0xF] = chip->registers[chip->optionX] & 0x80;
                         chip->registers[chip->optionX] <<= 1;
                         break;
