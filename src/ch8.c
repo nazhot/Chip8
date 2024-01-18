@@ -89,7 +89,6 @@ void ch8_dumpMemory( struct Chip8 *chip ) {
                     //clear screen
                     printf( "(Clear Screen)\n" );
                 } else if ( chip->currentInstruction == 0x00EE ) {
-                    assert( chip->stackAddress > 0 );
                     printf( "(Return to last stack address)\n" );
                     //commented out because techinically nothing will be in the stack
                     //printf( "\tStack Index: %u\n", chip->stackAddress - 1 );
@@ -102,35 +101,35 @@ void ch8_dumpMemory( struct Chip8 *chip ) {
                 printf( "\tNNN (address): %x\n", chip->optionNNN );
                 break;
             case 0x2:
-                assert( chip->stackAddress < STACK_SIZE ); 
-                log( "Pushing %x to stack, jumping to  %x\n", chip->programCounter, chip->optionNNN );
-                chip->stack[chip->stackAddress++] = chip->programCounter;
-                chip->programCounter = chip->optionNNN;
+                printf( "(Call Subroutine)\n");
+                printf( "\tSubroutine Address: %x\n", chip->optionNNN );
                 break;
             case 0x3:
-                if ( chip->registers[chip->optionX] == chip->optionNN ) {
-                    chip->programCounter += 2;
-                }
+                printf( "(Skip Next Instruction [Register Value == NN])\n" );
+                printf( "\tRegister: %x\n", chip->optionX );
+                printf( "\tCompared Against: %x\n", chip->optionNN );
                 break;
             case 0x4:
-                if ( chip->registers[chip->optionX] != chip->optionNN ) {
-                    chip->programCounter += 2;
-                }
+                printf( "(Skip Next Instruction [Register Value != NN])\n" );
+                printf( "\tRegister: %x\n", chip->optionX );
+                printf( "\tCompared Against: %x\n", chip->optionNN );
                 break;
             case 0x5:
-                if ( chip->registers[chip->optionX] == chip->registers[chip->optionY] ) {
-                    chip->programCounter += 2;
-                }
+                printf( "(Skip Next Instruction [Register Value == Register Value])\n" );
+                printf( "\tRegister 1: %x\n", chip->optionX );
+                printf( "\tRegister 2: %x\n", chip->optionY );
                 break;
             case 0x6:
                 //set register
-                log( "Setting register %x to %x\n", chip->optionX, chip->optionNN );
-                chip->registers[chip->optionX] = chip->optionNN;
+                printf( "(Set Register)\n" );
+                printf( "\tRegister: %x\n", chip->optionX );
+                printf( "\tValue: %u\n", chip->optionNN );
                 break;
             case 0x7:
                 //add to register
-                log( "Adding %x to register %x\n", chip->optionNN, chip->optionX );
-                chip->registers[chip->optionX] += chip->optionNN;
+                printf( "(Add to Register)\n" );
+                printf( "\tRegister: %x\n", chip->optionX );
+                printf( "\tValue: %u\n", chip->optionNN );
                 break;
             case 0x8:
                 switch ( chip->optionN ) {
