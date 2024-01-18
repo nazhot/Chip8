@@ -87,8 +87,8 @@ void ch8_dumpMemory( struct Chip8 *chip ) {
         if ( !chip->currentInstruction ) {
             continue;
         }
-        printf( "--%x--\n", chip->programCounter - 2 );
-        printf( "First nibble: %x ", chip->firstNibble );
+        printf( "--%x--%x--\n", chip->programCounter - 2, chip->programCounter - 1 );
+        printf( "Instruction: %x ", chip->currentInstruction );
         switch ( chip->firstNibble ) {
             case 0x0:
                 if ( chip->currentInstruction == 0x00E0 ) {
