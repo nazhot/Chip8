@@ -6,7 +6,7 @@
 
 #define BYTES_MEMORY 4096 //standard is 4096
 #define STACK_SIZE 15 //standard is 16
-#define DEBUG  //define to print debug messages
+//#define DEBUG  //define to print debug messages
 #define STEP 0 //whether to wait for user input to step through instructions
 
 #ifdef DEBUG

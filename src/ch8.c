@@ -78,10 +78,16 @@ void ch8_clearScreen( struct Chip8 *chip ) {
 
 void ch8_dumpMemory( struct Chip8 *chip ) {
     uint16_t lastProgramCounter = chip->programCounter;
+    float lastSecondsPerInstruction = chip->secondsPerInstruction;
+    chip->secondsPerInstruction = 0;
     chip->programCounter = chip->startingProgramAddress;
     printf( "------Memory Dump------\n" );
     while ( chip->programCounter < BYTES_MEMORY ) {
         ch8_fetchNextInstruction( chip );
+        if ( !chip->currentInstruction ) {
+            continue;
+        }
+        printf( "--%x--\n", chip->programCounter - 2 );
         printf( "First nibble: %x ", chip->firstNibble );
         switch ( chip->firstNibble ) {
             case 0x0:
@@ -225,45 +231,46 @@ void ch8_dumpMemory( struct Chip8 *chip ) {
             case 0xF:
                 switch ( chip->optionNN ) {
                     case 0x07:
-                        chip->registers[chip->optionX] = chip->delayTimer;
+                        printf( "(Set Register to Delay Timer)\n" );
+                        printf( "\tRegister: %x\n", chip->optionX );
                         break;
                     case 0x15:
-                        chip->delayTimer = chip->registers[chip->optionX];
+                        printf( "(Set Delay Timer to Register)\n" );
+                        printf( "\tRegister: %x\n", chip->optionX );
                         break;
                     case 0x18:
-                        chip->soundTimer = chip->registers[chip->optionX];
+                        printf( "(Set Delay Timer to Register)\n" );
+                        printf( "\tRegister: %x\n", chip->optionX );
                         break;
                     case 0x1E:
-                        chip->indexRegister += chip->registers[chip->optionX];
-                        chip->registers[0xF] = chip->indexRegister > 0x1000;
+                        printf( "(Increment Register)\n" );
+                        printf( "\tIncrement Value: %x\n", chip->optionX );
                         break;
                     case 0x0A:
-                        chip->keyBlocked = 1;
-                        chip->programCounter -= 2;
+                        printf( "(Block Until Key Pressed)\n" );
                         break;
                     case 0x29:
-                        chip->indexRegister = chip->startingFontAddress + ( chip->registers[chip->optionX] & 0x0F ) * 5;
+                        printf( "(Set Index Register To Font Address)\n" );
+                        printf( "\tRegister: %x\n", chip->optionX );
                         break;
                     case 0x33:
-                        chip->memory[chip->indexRegister] = chip->registers[chip->optionX] / 100;
-                        chip->memory[chip->indexRegister + 1] = chip->registers[chip->optionX] / 10 % 10;
-                        chip->memory[chip->indexRegister + 2] = chip->registers[chip->optionX] % 10;
+                        printf( "(Set Addresses at Index Register to Digits at Register )\n" );
+                        printf( "\tRegister: %x\n", chip->optionX );
                         break;
                     case 0x55:
-                        for ( int i = 0; i <= chip->optionX; ++i ) {
-                            chip->memory[chip->indexRegister + i] = chip->registers[i]; 
-                        }
+                        printf( "(Set Addresses at Index Register to Registers)\n" );
+                        printf( "\tUp to and Including Register: %x\n", chip->optionX );
                         break;
                     case 0x65:
-                        for ( int i = 0; i <= chip->optionX; ++i ) {
-                            chip->registers[i] = chip->memory[chip->indexRegister + i];
-                        }
+                        printf( "(Set Registers to Memory at Index Register)\n" );
+                        printf( "\tUp to and Including Register: %x\n", chip->optionX );
                         break;
                 }
                 break;
         }
     }
     chip->programCounter = lastProgramCounter;
+    chip->secondsPerInstruction = lastSecondsPerInstruction;
 }
 
 void ch8_displaySprite( struct Chip8 *chip ) {

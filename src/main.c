@@ -11,6 +11,7 @@ int main( int argc, char *argv[] ) {
     struct Chip8 *chip = ch8_initialize();
     ch8_initializeFonts( chip, 0x50 );
     ch8_loadFileIntoMemory( chip, "roms/test_opcode.ch8" );
+    ch8_dumpMemory( chip );
 
     //Test program, just drawing 0 at the top left of the screen
     //memory[0x200] = 0x00;
